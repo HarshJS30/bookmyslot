@@ -48,13 +48,33 @@ export async function POST(
 export async function GET(
     request: Request,
     { params }: { params: Promise<{ eventId: string }> }
-){
+) {
     const { eventId } = await params
+
+    const fiveMinAgo = new Date(Date.now() - 5 * 60 * 1000)
+
+    await prisma.seat.updateMany({
+        where: {
+            eventId,
+            status: "HELD",
+            reservedAt: {
+                lt: fiveMinAgo
+            }
+        },
+        data: {
+            status: "AVAILABLE",
+            reservedAt: null
+        }
+    })
+
     const seats = await prisma.seat.findMany({
-        where: { eventId: eventId },
-        include:{
+        where: {
+            eventId
+        },
+        include: {
             category: true,
         }
     })
+
     return Response.json(seats)
 }
