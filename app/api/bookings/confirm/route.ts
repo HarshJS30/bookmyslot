@@ -1,3 +1,4 @@
+// app/api/bookings/confirm/route.ts
 import { auth } from '@/auth'
 import { PrismaClient, Prisma } from '../../../generated/prisma/client'
 import redis from '@/lib/redis'
@@ -17,7 +18,6 @@ export async function POST(request: Request) {
         return new Response("Missing Fields", { status: 400 })
     }
 
-    // Verify that the current user owns the locks
     for (const seatId of body.seatIds) {
         const lockOwner = await redis.get(`seat:lock:${seatId}`)
 
@@ -32,7 +32,6 @@ export async function POST(request: Request) {
     try {
         const result = await prisma.$transaction(async (tx) => {
 
-            // 1. Create booking
             const booking = await tx.booking.create({
                 data: {
                     status: "PENDING",
@@ -40,7 +39,6 @@ export async function POST(request: Request) {
                 }
             })
 
-            // 2. Create booking-seat records
             const bookingSeats = await tx.bookingSeat.createMany({
                 data: body.seatIds.map((seatId: string) => ({
                     seatId,
@@ -48,20 +46,15 @@ export async function POST(request: Request) {
                 }))
             })
 
-            // 3. Fetch seats with pricing, inside the same transaction
             const seatsWithPricing = await tx.seat.findMany({
                 where: { id: { in: body.seatIds } },
                 include: { category: true }
             })
 
-            // Prisma returns Decimal fields as Prisma.Decimal objects, not plain numbers —
-            // summing with + would either fail or silently coerce incorrectly, so use
-            // Decimal-aware arithmetic and convert to a number only at the end.
             const totalAmount = seatsWithPricing
                 .reduce((sum, seat) => sum.plus(seat.category.price), new Prisma.Decimal(0))
                 .toNumber()
 
-            // 4. Convert HELD → BOOKED
             try {
                 for (const seatId of body.seatIds) {
                     await tx.seat.update({
@@ -87,7 +80,6 @@ export async function POST(request: Request) {
                 throw err
             }
 
-            // 5. Confirm booking
             const confirmedBooking = await tx.booking.update({
                 where: {
                     id: booking.id,
@@ -98,7 +90,6 @@ export async function POST(request: Request) {
                 }
             })
 
-            // 6. Create payment with real calculated amount
             const payment = await tx.payment.create({
                 data: {
                     amount: totalAmount,
@@ -110,11 +101,26 @@ export async function POST(request: Request) {
             return {
                 booking: confirmedBooking,
                 bookingSeats,
-                payment
+                payment,
+                seatsWithPricing // carried out so we can publish per-event below
             }
         })
 
         await Promise.all(body.seatIds.map((seatId: string) => redis.del(`seat:lock:${seatId}`)))
+
+        try {
+            await Promise.all(
+                result.seatsWithPricing.map((seat) =>
+                    redis.publish('realtime', JSON.stringify({
+                        eventId: seat.eventId,
+                        seatId: seat.id,
+                        status: "BOOKED"
+                    }))
+                )
+            )
+        } catch (err) {
+            console.error("Failed to publish seat updates:", err)
+        }
 
         return Response.json(result)
 

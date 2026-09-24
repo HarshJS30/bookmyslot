@@ -1,3 +1,4 @@
+// app/api/events/[eventId]/seats/[seatId]/reserve/route.ts
 import { auth } from "@/auth"
 import { PrismaClient } from "../../../../../../generated/prisma/client";
 import redis from "@/lib/redis";
@@ -22,15 +23,23 @@ export async function POST(
         return new Response("Seat is currently being reserved by another user. Please try again later.", { status: 409 })
     }
 
+    let updated
     try {
-        const updated = await prisma.seat.update({
+        updated = await prisma.seat.update({
             where: { id: seatId, status: "AVAILABLE" },
             data: { status: "HELD", reservedAt: new Date() }
         })
-
-        return Response.json(updated)
     } catch (err) {
         await redis.del(lockKey)
         return new Response("Seat is no longer available", { status: 409 })
     }
+
+    try {
+        await redis.publish('realtime', JSON.stringify({ eventId, seatId, status: "HELD" }))
+    } catch (err) {
+        console.error("Failed to publish seat update:", err)
+        // don't fail the request — the reservation itself succeeded
+    }
+
+    return Response.json(updated)
 }
