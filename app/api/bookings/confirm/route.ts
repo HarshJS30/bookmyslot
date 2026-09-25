@@ -1,9 +1,8 @@
-// app/api/bookings/confirm/route.ts
 import { auth } from '@/auth'
 import { PrismaClient, Prisma } from '../../../generated/prisma/client'
 import redis from '@/lib/redis'
+import prisma from '@/lib/prisma'
 
-const prisma = new PrismaClient()
 
 export async function POST(request: Request) {
     const session = await auth()
@@ -102,7 +101,7 @@ export async function POST(request: Request) {
                 booking: confirmedBooking,
                 bookingSeats,
                 payment,
-                seatsWithPricing // carried out so we can publish per-event below
+                seatsWithPricing 
             }
         })
 
