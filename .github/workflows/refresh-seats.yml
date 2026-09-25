@@ -1,0 +1,12 @@
+name: Refresh Stale Seats
+on:
+  schedule:
+    - cron: '*/5 * * * *'
+  workflow_dispatch:
+
+jobs:
+  refresh:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Ping refresh-all-seats route
+        run: curl -s https://your-deployed-app.com/api/cron/refresh-all-seats
