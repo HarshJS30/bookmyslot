@@ -1,8 +1,7 @@
 import { auth } from "@/auth"
 import { PrismaClient } from "../../../../generated/prisma/client";
 import redis from "@/lib/redis";
-
-const prisma = new PrismaClient()
+import prisma from "@/lib/prisma";
 
 export async function POST(
     request: Request,

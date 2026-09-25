@@ -1,7 +1,6 @@
 import { PrismaClient } from "../../../generated/prisma/client";
 import redis from "@/lib/redis";
-
-const prisma = new PrismaClient()
+import prisma from "@/lib/prisma";
 
 export async function GET(request: Request) {
     const fiveMinAgo = new Date(Date.now() - 5 * 60 * 1000)

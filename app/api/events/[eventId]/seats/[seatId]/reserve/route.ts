@@ -1,9 +1,7 @@
-// app/api/events/[eventId]/seats/[seatId]/reserve/route.ts
 import { auth } from "@/auth"
 import { PrismaClient } from "../../../../../../generated/prisma/client";
 import redis from "@/lib/redis";
-
-const prisma = new PrismaClient()
+import prisma from "@/lib/prisma";
 
 export async function POST(
     request: Request,
@@ -38,7 +36,6 @@ export async function POST(
         await redis.publish('realtime', JSON.stringify({ eventId, seatId, status: "HELD" }))
     } catch (err) {
         console.error("Failed to publish seat update:", err)
-        // don't fail the request — the reservation itself succeeded
     }
 
     return Response.json(updated)
