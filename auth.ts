@@ -8,6 +8,7 @@ const prisma = new PrismaClient()
 export const { handlers, signIn, signOut, auth } = NextAuth({
   adapter: PrismaAdapter(prisma),
   providers: [GitHub],
+  trustHost: true,
   callbacks: {
     async session({ session, user }) {
       if (session.user) {
