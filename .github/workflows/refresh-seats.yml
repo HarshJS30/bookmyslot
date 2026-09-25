@@ -5,8 +5,19 @@ on:
   workflow_dispatch:
 
 jobs:
-  refresh:
+  keep-services-active:
     runs-on: ubuntu-latest
     steps:
-      - name: Ping refresh-all-seats route
-        run: curl -s https://your-deployed-app.com/api/cron/refresh-all-seats
+      - name: Ping Render realtime server
+        env:
+          REALTIME_SERVER_URL: ${{ vars.REALTIME_SERVER_URL }}
+        run: |
+          test -n "$REALTIME_SERVER_URL" || { echo "Set the REALTIME_SERVER_URL repository variable"; exit 1; }
+          curl --fail --silent --show-error --retry 2 --retry-all-errors --retry-delay 10 --max-time 90 "${REALTIME_SERVER_URL%/}/healthz"
+
+      - name: Refresh expired seat holds on Vercel
+        env:
+          VERCEL_APP_URL: ${{ vars.VERCEL_APP_URL }}
+        run: |
+          test -n "$VERCEL_APP_URL" || { echo "Set the VERCEL_APP_URL repository variable"; exit 1; }
+          curl --fail --silent --show-error --max-time 30 "${VERCEL_APP_URL%/}/api/cron/refresh-all-seats"
