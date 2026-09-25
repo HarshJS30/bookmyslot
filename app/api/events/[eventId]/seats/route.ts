@@ -1,5 +1,6 @@
 import { auth } from "@/auth"
 import { PrismaClient } from "../../../../generated/prisma/client";
+import redis from "@/lib/redis";
 
 const prisma = new PrismaClient()
 
@@ -53,19 +54,40 @@ export async function GET(
 
     const fiveMinAgo = new Date(Date.now() - 5 * 60 * 1000)
 
-    await prisma.seat.updateMany({
+    const staleSeats = await prisma.seat.findMany({
         where: {
             eventId,
             status: "HELD",
-            reservedAt: {
-                lt: fiveMinAgo
-            }
+            reservedAt: { lt: fiveMinAgo }
         },
-        data: {
-            status: "AVAILABLE",
-            reservedAt: null
-        }
+        select: { id: true }
     })
+
+    if (staleSeats.length > 0) {
+        await prisma.seat.updateMany({
+            where: {
+                id: { in: staleSeats.map((s) => s.id) }
+            },
+            data: {
+                status: "AVAILABLE",
+                reservedAt: null
+            }
+        })
+
+        try {
+            await Promise.all(
+                staleSeats.map((seat) =>
+                    redis.publish('realtime', JSON.stringify({
+                        eventId,
+                        seatId: seat.id,
+                        status: "AVAILABLE"
+                    }))
+                )
+            )
+        } catch (err) {
+            console.error("Failed to publish expiry updates:", err)
+        }
+    }
 
     const seats = await prisma.seat.findMany({
         where: {
