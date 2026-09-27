@@ -17,15 +17,14 @@ export async function POST(request: Request) {
         return new Response("Missing Fields", { status: 400 })
     }
 
-    for (const seatId of body.seatIds) {
-        const lockOwner = await redis.get(`seat:lock:${seatId}`)
+    const lockOwners = await Promise.all(
+        body.seatIds.map((seatId: string) => redis.get(`seat:lock:${seatId}`))
+    )
 
-        if (lockOwner !== session.user.id) {
-            return new Response(
-                "One or more selected seats are held by another user",
-                { status: 409 }
-            )
-        }
+    const allOwnedByUser = lockOwners.every((owner) => owner === session.user.id)
+
+    if (!allOwnedByUser) {
+        return new Response("One or more selected seats are held by another user", { status: 409 })
     }
 
     try {
