@@ -23,15 +23,19 @@ model User {
 }
 
 model Event {
-  id               String           @id @default(cuid())
+  id               String   @id @default(cuid())
   name             String
+  imageUrl         String?
+  venue            Venue @relation(fields: [venueId], references: [id])
   startsAt         DateTime
-  organizerId      String
   venueId          String
-  organizer        User             @relation("OrganizerEvents", fields: [organizerId], references: [id])
-  venue            Venue            @relation(fields: [venueId], references: [id])
+  organizer        User @relation("OrganizerEvents", fields: [organizerId], references: [id])
+  organizerId      String
   seats            Seat[]
   ticketCategories TicketCategory[]
+
+  @@index([organizerId])
+  @@index([venueId])
 }
 
 model TicketCategory {
