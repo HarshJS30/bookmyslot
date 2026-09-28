@@ -25,7 +25,9 @@ model User {
 model Event {
   id               String   @id @default(cuid())
   name             String
+  description      String?
   imageUrl         String?
+  durationMinutes  Int?
   venue            Venue @relation(fields: [venueId], references: [id])
   startsAt         DateTime
   venueId          String
