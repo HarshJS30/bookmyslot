@@ -17,12 +17,21 @@ export async function POST(request: Request) {
         return new Response("Missing required fields", { status: 400 })
     }
 
+    if (
+        body.durationMinutes !== undefined &&
+        (!Number.isInteger(body.durationMinutes) || body.durationMinutes <= 0)
+    ) {
+        return new Response("durationMinutes must be a positive whole number", { status: 400 })
+    }
+
     const event = await prisma.event.create({
         data: {
             name: body.name,
+            description: body.description || null,
+            imageUrl: body.imageUrl || null,
+            durationMinutes: body.durationMinutes ?? null,
             venueId: body.venueId,
             startsAt: new Date(body.startsAt),
-            imageUrl: body.imageUrl || null,
             organizerId: session.user.id,
         }
     })
