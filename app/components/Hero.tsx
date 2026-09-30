@@ -1,6 +1,6 @@
 import Image from "next/image";
 import Link from "next/link";
-import { SignOut, UserCircle } from "@phosphor-icons/react/dist/ssr";
+import { SignOut, Ticket, UserCircle } from "@phosphor-icons/react/dist/ssr";
 import styles from "../components/Hero.module.css";
 import heroImg from "../../public/hero-image1.png";
 import logoImg from "../../public/logo.png";
@@ -44,6 +44,10 @@ export default function Hero({
                 <UserCircle size={26} weight="regular" aria-hidden="true" />
                 <span>Hi, {displayName}</span>
               </div>
+              <Link className={styles.bookingsLink} href="/bookings">
+                <Ticket size={17} aria-hidden="true" />
+                <span>My bookings</span>
+              </Link>
               <form action={signOutAction}>
                 <button className={styles.accountIcon} type="submit" aria-label="Sign out" title="Sign out">
                   <SignOut size={21} weight="regular" aria-hidden="true" />

@@ -334,6 +334,22 @@
   text-shadow: 0 1px 5px rgb(0 0 0 / 55%);
 }
 
+.bookingsLink {
+  display: inline-flex;
+  min-height: 40px;
+  align-items: center;
+  gap: 6px;
+  color: rgb(255 255 255 / 88%);
+  font-family: var(--font-inter), sans-serif;
+  font-size: 12px;
+  text-decoration: none;
+  transition: color 160ms ease;
+}
+
+.bookingsLink:hover {
+  color: #ff8b7d;
+}
+
 .accountIcon {
   display: grid;
   width: 44px;
