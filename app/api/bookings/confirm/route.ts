@@ -1,5 +1,6 @@
 import { auth } from '@/auth'
 import { PrismaClient, Prisma } from '../../../generated/prisma/client'
+import { corsOptions, withCors } from '@/lib/cors'
 import redis from '@/lib/redis'
 import prisma from '@/lib/prisma'
 
@@ -8,13 +9,13 @@ export async function POST(request: Request) {
     const session = await auth()
 
     if (!session) {
-        return new Response("Unauthorized Access", { status: 401 })
+        return withCors(request, new Response("Unauthorized Access", { status: 401 }))
     }
 
     const body = await request.json()
 
     if (!Array.isArray(body.seatIds) || body.seatIds.length === 0) {
-        return new Response("Missing Fields", { status: 400 })
+        return withCors(request, new Response("Missing Fields", { status: 400 }))
     }
 
     const lockOwners = await Promise.all(
@@ -24,7 +25,10 @@ export async function POST(request: Request) {
     const allOwnedByUser = lockOwners.every((owner) => owner === session.user.id)
 
     if (!allOwnedByUser) {
-        return new Response("One or more selected seats are held by another user", { status: 409 })
+        return withCors(
+            request,
+            new Response("One or more selected seats are held by another user", { status: 409 }),
+        )
     }
 
     try {
@@ -120,16 +124,20 @@ export async function POST(request: Request) {
             console.error("Failed to publish seat updates:", err)
         }
 
-        return Response.json(result)
+        return withCors(request, Response.json(result))
 
     } catch (err) {
         if (
             err instanceof Error &&
             err.message === "One or more seats are no longer available"
         ) {
-            return new Response(err.message, { status: 409 })
+            return withCors(request, new Response(err.message, { status: 409 }))
         }
 
-        return new Response("Internal Server Error", { status: 500 })
+        return withCors(request, new Response("Internal Server Error", { status: 500 }))
     }
+}
+
+export async function OPTIONS(request: Request) {
+    return corsOptions(request)
 }
