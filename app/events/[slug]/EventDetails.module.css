@@ -1,0 +1,273 @@
+@font-face {
+  font-family: "Coolvetica";
+  src: url("/fonts/Coolvetica%20Rg.otf") format("opentype");
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+}
+
+.page {
+  min-height: 100vh;
+  padding: 28px clamp(18px, 6vw, 76px) 64px;
+  background:
+    radial-gradient(ellipse at 15% 0%, rgb(37 43 47 / 48%), transparent 38%),
+    #090b0d;
+  color: #f5f5f2;
+  font-family: var(--font-inter), sans-serif;
+}
+
+.backLink {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  margin-bottom: 20px;
+  color: rgb(245 245 242 / 70%);
+  font-size: 13px;
+  text-decoration: none;
+}
+
+.backLink:hover {
+  color: #ff685e;
+}
+
+.content {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(260px, 290px);
+  align-items: start;
+  gap: 28px;
+  width: 100%;
+  max-width: 1180px;
+  margin: 0 auto;
+}
+
+.page .pageTitle {
+  display: block;
+  width: 100%;
+  max-width: 1180px;
+  margin: 0 auto 24px;
+  font-family: "Coolvetica", sans-serif;
+  font-size: clamp(32px, 3.2vw, 40px);
+  font-weight: 400;
+  line-height: 1.15;
+}
+
+.copySection {
+  margin-top: 28px;
+}
+
+.copySection h2 {
+  margin: 0 0 10px;
+  font-family: "Coolvetica", sans-serif;
+  font-size: 22px;
+  font-weight: 400;
+}
+
+.poster {
+  display: grid;
+  min-height: 240px;
+  aspect-ratio: 1.78;
+  place-items: center;
+  border: 1px solid rgb(255 255 255 / 10%);
+  border-radius: 7px;
+  background-color: #202326;
+  background-position: center;
+  background-size: cover;
+  box-shadow: 0 12px 32px rgb(0 0 0 / 28%);
+}
+
+.posterFrame {
+  min-width: 0;
+}
+
+.posterFallback {
+  background: linear-gradient(145deg, #4c3935, #15191c 72%);
+  font-family: "Coolvetica", sans-serif;
+  font-size: 28px;
+  text-align: center;
+}
+
+.description {
+  max-width: 760px;
+  margin: 0 0 12px;
+  color: rgb(235 237 238 / 70%);
+  font-size: 14px;
+  line-height: 1.7;
+  white-space: pre-wrap;
+}
+
+.details {
+  position: sticky;
+  top: 18px;
+  display: flex;
+  min-height: 100%;
+  align-self: stretch;
+  flex-direction: column;
+  padding: 20px 18px 15px;
+  border: 1px solid rgb(255 255 255 / 10%);
+  border-radius: 8px;
+  background: linear-gradient(155deg, rgb(20 23 27 / 98%), rgb(12 14 17 / 98%));
+  box-shadow: 0 14px 34px rgb(0 0 0 / 24%);
+}
+
+.details h2 {
+  margin: 0 0 13px;
+  font-family: "Coolvetica", sans-serif;
+  font-size: 21px;
+  font-weight: 400;
+}
+
+.detailRow {
+  display: grid;
+  grid-template-columns: 30px minmax(0, 1fr);
+  align-items: center;
+  gap: 9px;
+  min-height: 50px;
+  padding: 8px 0;
+  border-top: 1px solid rgb(255 255 255 / 7%);
+}
+
+.iconTile {
+  display: grid;
+  width: 32px;
+  height: 32px;
+  place-items: center;
+  border: 1px solid currentcolor;
+  border-radius: 7px;
+}
+
+.detailText {
+  display: grid;
+  min-width: 0;
+  gap: 2px;
+}
+
+.detailLabel {
+  color: rgb(235 237 238 / 54%);
+  font-size: 10px;
+  line-height: 1.2;
+}
+
+.detailText > :last-child {
+  min-width: 0;
+  color: #f5f5f2;
+  font-size: 14px;
+  line-height: 1.3;
+  overflow-wrap: anywhere;
+}
+
+.dateIcon,
+.timeIcon,
+.venueIcon,
+.locationIcon,
+.durationIcon {
+  color: rgb(235 237 238 / 82%);
+  background: rgb(255 255 255 / 5%);
+}
+
+.bookingBlock {
+  margin-top: auto;
+  padding-top: 15px;
+  border-top: 1px solid rgb(255 255 255 / 12%);
+}
+
+.priceLine strong {
+  font-size: 20px;
+  font-weight: 700;
+}
+
+.availability,
+.unavailable {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin: 5px 0 10px;
+  color: #ffbf4d;
+  font-size: 11px;
+}
+
+.availability > span {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #2ddd85;
+  box-shadow: 0 0 8px rgb(45 221 133 / 44%);
+}
+
+.unavailable {
+  color: rgb(235 237 238 / 58%);
+}
+
+.bookButton {
+  display: flex;
+  width: 100%;
+  min-height: 44px;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  border: 0;
+  border-radius: 7px;
+  background: #f13d54;
+  color: #fff;
+  cursor: pointer;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 700;
+  text-decoration: none;
+  transition: background 150ms ease, transform 120ms ease;
+}
+
+.bookButton:hover {
+  background: #ff5367;
+}
+
+.bookButton:active {
+  transform: scale(0.98);
+}
+
+.secureNote {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  margin: 8px 0 0;
+  color: rgb(235 237 238 / 48%);
+  font-size: 9px;
+  text-align: center;
+}
+
+.secureNote svg {
+  color: #54d995;
+  flex: 0 0 auto;
+}
+
+.eventCopy {
+  grid-column: 1;
+}
+
+@media (max-width: 700px) {
+  .page {
+    padding: 22px 16px 40px;
+  }
+
+  .content {
+    grid-template-columns: 1fr;
+    gap: 14px;
+  }
+
+  .details {
+    position: static;
+    grid-row: 2;
+  }
+
+  .eventCopy {
+    grid-row: 3;
+  }
+
+  .poster {
+    min-height: 190px;
+  }
+
+  .page .pageTitle {
+    font-size: 32px;
+  }
+}

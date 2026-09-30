@@ -1,0 +1,83 @@
+.progressNav {
+  width: 100%;
+  max-width: 940px;
+  margin: 0 auto 24px;
+}
+
+.progress {
+  display: flex;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.progressStep {
+  position: relative;
+  display: grid;
+  flex: 1;
+  justify-items: center;
+  gap: 7px;
+  color: rgb(235 237 238 / 48%);
+  font-size: 11px;
+  text-align: center;
+}
+
+.progressStep:not(:last-child)::after {
+  position: absolute;
+  top: 13px;
+  left: calc(50% + 19px);
+  right: calc(-50% + 19px);
+  height: 1px;
+  background: rgb(255 255 255 / 17%);
+  content: "";
+}
+
+.marker {
+  z-index: 1;
+  display: grid;
+  width: 27px;
+  height: 27px;
+  place-items: center;
+  border: 1px solid rgb(255 255 255 / 25%);
+  border-radius: 50%;
+  background: #121518;
+  color: rgb(255 255 255 / 70%);
+  font-size: 11px;
+}
+
+.complete,
+.current {
+  color: #f5f5f2;
+}
+
+.complete .marker,
+.current .marker {
+  border-color: #ed433d;
+  background: #ed433d;
+  color: #fff;
+}
+
+.complete:not(:last-child)::after {
+  background: #ed433d;
+}
+
+.cancelled .marker {
+  border-color: #ff8b7d;
+  background: #ff8b7d;
+}
+
+@media (max-width: 480px) {
+  .progressStep {
+    font-size: 10px;
+  }
+
+  .progressStep:not(:last-child)::after {
+    left: calc(50% + 17px);
+    right: calc(-50% + 17px);
+  }
+
+  .marker {
+    width: 25px;
+    height: 25px;
+  }
+}

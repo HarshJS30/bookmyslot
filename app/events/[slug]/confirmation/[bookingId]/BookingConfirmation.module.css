@@ -1,0 +1,204 @@
+.confirmation {
+  width: min(100%, 720px);
+  margin: 0 auto;
+  padding: 22px;
+  border: 1px solid rgb(255 255 255 / 10%);
+  border-radius: 8px;
+  background: rgb(17 20 23 / 92%);
+  color: #f5f5f2;
+  font-family: var(--font-inter), sans-serif;
+}
+
+.statusHeader {
+  display: grid;
+  justify-items: center;
+  gap: 9px;
+  padding: 6px 0 21px;
+  text-align: center;
+}
+
+.statusHeader > svg {
+  color: #54d995;
+}
+
+.statusHeader h1 {
+  margin: 0;
+  font-family: "Coolvetica", sans-serif;
+  font-size: 27px;
+  font-weight: 400;
+}
+
+.statusHeader p {
+  margin: 0;
+  color: rgb(235 237 238 / 63%);
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+.cancelled > svg {
+  color: #ff8b7d;
+}
+
+.reference {
+  display: grid;
+  gap: 5px;
+  margin-bottom: 12px;
+  padding: 14px;
+  border: 1px solid rgb(255 255 255 / 8%);
+  border-radius: 6px;
+  background: rgb(255 255 255 / 2%);
+}
+
+.reference span {
+  color: rgb(235 237 238 / 55%);
+  font-size: 11px;
+}
+
+.reference strong {
+  overflow-wrap: anywhere;
+  font-family: var(--font-geist-mono), monospace;
+  font-size: 13px;
+}
+
+.ticket {
+  padding: 14px;
+  border: 1px solid rgb(255 255 255 / 8%);
+  border-radius: 6px;
+  background: rgb(255 255 255 / 2%);
+}
+
+.eventSummary {
+  display: grid;
+  grid-template-columns: 64px minmax(0, 1fr);
+  align-items: center;
+  gap: 12px;
+  padding-bottom: 14px;
+  border-bottom: 1px solid rgb(255 255 255 / 8%);
+}
+
+.poster {
+  display: grid;
+  width: 64px;
+  aspect-ratio: 0.78;
+  place-items: center;
+  overflow: hidden;
+  border-radius: 5px;
+  background-color: #25292c;
+  background-position: center;
+  background-size: cover;
+}
+
+.posterFallback {
+  background: linear-gradient(145deg, #4c3935, #15191c 72%);
+  font-family: "Coolvetica", sans-serif;
+  font-size: 25px;
+}
+
+.eventSummary h2 {
+  margin: 0 0 5px;
+  font-family: "Coolvetica", sans-serif;
+  font-size: 17px;
+  font-weight: 400;
+}
+
+.eventSummary p,
+.eventSummary time {
+  display: block;
+  margin: 3px 0 0;
+  color: rgb(235 237 238 / 61%);
+  font-size: 11px;
+  line-height: 1.4;
+}
+
+.ticketRows {
+  display: grid;
+  gap: 11px;
+  padding: 14px 0;
+}
+
+.ticketRow,
+.totalRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  font-size: 12px;
+}
+
+.ticketRow span,
+.totalRow span {
+  color: rgb(235 237 238 / 72%);
+}
+
+.ticketRow strong {
+  flex: 0 0 auto;
+  font-weight: 500;
+}
+
+.totalRow {
+  padding-top: 13px;
+  border-top: 1px solid rgb(255 255 255 / 10%);
+  font-size: 14px;
+}
+
+.totalRow strong {
+  font-size: 17px;
+}
+
+.error {
+  margin: 13px 0 0;
+  color: #ff958a;
+  font-size: 12px;
+  line-height: 1.5;
+  overflow-wrap: anywhere;
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 9px;
+  margin-top: 15px;
+}
+
+.cancelButton,
+.eventButton {
+  display: inline-flex;
+  min-height: 42px;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  padding: 0 14px;
+  border: 1px solid rgb(255 255 255 / 15%);
+  border-radius: 6px;
+  background: transparent;
+  color: #f5f5f2;
+  cursor: pointer;
+  font: inherit;
+  font-size: 12px;
+  text-decoration: none;
+}
+
+.cancelButton {
+  border-color: rgb(255 139 125 / 35%);
+  color: #ff9b90;
+}
+
+.cancelButton:hover:not(:disabled),
+.eventButton:hover {
+  background: rgb(255 255 255 / 6%);
+}
+
+.cancelButton:disabled {
+  cursor: wait;
+  opacity: 0.6;
+}
+
+@media (max-width: 520px) {
+  .confirmation {
+    padding: 16px;
+  }
+
+  .actions > * {
+    flex: 1 1 100%;
+  }
+}

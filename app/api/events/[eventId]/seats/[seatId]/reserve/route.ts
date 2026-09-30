@@ -1,6 +1,4 @@
 import { auth } from "@/auth"
-import { PrismaClient } from "../../../../../../generated/prisma/client";
-import { corsOptions, withCors } from "@/lib/cors";
 import redis from "@/lib/redis";
 import prisma from "@/lib/prisma";
 
@@ -12,17 +10,14 @@ export async function POST(
     const session = await auth()
 
     if (!session) {
-        return withCors(request, new Response("Unauthorized", { status: 401 }))
+        return new Response("Unauthorized", { status: 401 })
     }
 
     const lockKey = `seat:lock:${seatId}`
     const lockResult = await redis.set(lockKey, session.user.id, "EX", 300, "NX")
 
     if (lockResult === null) {
-        return withCors(
-            request,
-            new Response("Seat is currently being reserved by another user. Please try again later.", { status: 409 }),
-        )
+        return new Response("Seat is currently being reserved by another user. Please try again later.", { status: 409 })
     }
 
     let updated
@@ -31,9 +26,9 @@ export async function POST(
             where: { id: seatId, status: "AVAILABLE" },
             data: { status: "HELD", reservedAt: new Date() }
         })
-    } catch (err) {
+    } catch {
         await redis.del(lockKey)
-        return withCors(request, new Response("Seat is no longer available", { status: 409 }))
+        return new Response("Seat is no longer available", { status: 409 })
     }
 
     try {
@@ -42,9 +37,5 @@ export async function POST(
         console.error("Failed to publish seat update:", err)
     }
 
-    return withCors(request, Response.json(updated))
-}
-
-export async function OPTIONS(request: Request) {
-    return corsOptions(request)
+    return Response.json(updated)
 }

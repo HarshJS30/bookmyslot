@@ -12,9 +12,7 @@ const redisUrl = process.env.REDIS_URL;
 if (!redisUrl) {
     throw new Error("REDIS_URL must be set for the realtime server");
 }
-const frontendOrigins = (process.env.FRONTEND_URL ?? "*")
-    .split(",")
-    .map((origin) => origin.trim());
+const frontendOrigin = "https://bookmyslot.helloharsh.me";
 let subscribed = false;
 const httpServer = (0, node_http_1.createServer)((request, response) => {
     const pathname = request.url?.split("?", 1)[0];
@@ -41,9 +39,7 @@ const httpServer = (0, node_http_1.createServer)((request, response) => {
 });
 const io = new socket_io_1.Server(httpServer, {
     cors: {
-        origin: frontendOrigins.length === 1
-            ? frontendOrigins[0]
-            : frontendOrigins,
+        origin: frontendOrigin,
     },
 });
 const subscriber = new ioredis_1.default(redisUrl, {

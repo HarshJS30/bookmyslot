@@ -1,0 +1,234 @@
+.page {
+  min-height: 100vh;
+  padding: 28px clamp(18px, 6vw, 76px) 64px;
+  background:
+    radial-gradient(ellipse at 15% 0%, rgb(37 43 47 / 48%), transparent 38%),
+    #090b0d;
+  color: #f5f5f2;
+  font-family: var(--font-inter), sans-serif;
+}
+
+.backLink {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  margin-bottom: 20px;
+  color: rgb(245 245 242 / 70%);
+  font-size: 13px;
+  text-decoration: none;
+}
+
+.backLink:hover {
+  color: #ff8b7d;
+}
+
+.header,
+.checkoutGrid {
+  max-width: 940px;
+  margin: 0 auto;
+}
+
+.header {
+  margin-bottom: 25px;
+}
+
+.eyebrow {
+  margin: 0 0 6px;
+  color: rgb(235 237 238 / 58%);
+  font-size: 12px;
+}
+
+.header h1 {
+  margin: 0;
+  font-family: "Coolvetica", sans-serif;
+  font-size: 34px;
+  font-weight: 400;
+}
+
+.header > p:last-child {
+  margin: 7px 0 0;
+  color: rgb(235 237 238 / 68%);
+  font-size: 14px;
+}
+
+.checkoutGrid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 320px;
+  align-items: start;
+  gap: 20px;
+}
+
+.paymentPanel,
+.orderPanel {
+  border: 1px solid rgb(255 255 255 / 10%);
+  border-radius: 8px;
+  background: rgb(17 20 23 / 90%);
+  padding: 20px;
+}
+
+.panelHeading {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  margin-bottom: 18px;
+  color: #ff8b7d;
+}
+
+.panelHeading h2,
+.orderPanel h2 {
+  margin: 0;
+  color: #f5f5f2;
+  font-family: "Coolvetica", sans-serif;
+  font-size: 20px;
+  font-weight: 400;
+}
+
+.demoMethod {
+  display: flex;
+  min-height: 64px;
+  align-items: center;
+  gap: 11px;
+  padding: 12px;
+  border: 1px solid rgb(255 255 255 / 14%);
+  border-radius: 6px;
+  background: rgb(255 255 255 / 3%);
+}
+
+.radio {
+  width: 15px;
+  height: 15px;
+  flex: 0 0 15px;
+  border: 4px solid #ff685e;
+  border-radius: 50%;
+  background: #f5f5f2;
+}
+
+.demoMethod > span:nth-child(2) {
+  display: grid;
+  flex: 1;
+  gap: 4px;
+  min-width: 0;
+}
+
+.demoMethod strong {
+  font-size: 13px;
+}
+
+.demoMethod small,
+.seatLine small {
+  color: rgb(235 237 238 / 54%);
+  font-size: 11px;
+}
+
+.demoBadge {
+  padding: 4px 6px;
+  border: 1px solid rgb(255 139 125 / 40%);
+  border-radius: 4px;
+  color: #ff8b7d;
+  font-size: 9px;
+}
+
+.disclaimer {
+  margin: 16px 0 0;
+  color: rgb(235 237 238 / 56%);
+  font-size: 12px;
+  line-height: 1.6;
+}
+
+.holdNote {
+  margin: 15px 0 0;
+  padding-top: 13px;
+  border-top: 1px solid rgb(255 255 255 / 9%);
+  color: rgb(235 237 238 / 57%);
+  font-size: 11px;
+  line-height: 1.5;
+}
+
+.orderPanel h2 {
+  margin-bottom: 16px;
+}
+
+.seatList {
+  display: grid;
+  gap: 13px;
+  max-height: 230px;
+  overflow-y: auto;
+  padding: 0 2px 16px 0;
+}
+
+.seatLine,
+.totalLine {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  font-size: 12px;
+}
+
+.seatLine > span:first-child {
+  display: grid;
+  gap: 3px;
+}
+
+.seatLine > span:last-child {
+  flex: 0 0 auto;
+  color: rgb(235 237 238 / 75%);
+}
+
+.seatLine small {
+  display: block;
+}
+
+.totalLine {
+  margin: 0 0 15px;
+  padding-top: 14px;
+  border-top: 1px solid rgb(255 255 255 / 11%);
+  font-size: 14px;
+}
+
+.payButton {
+  display: inline-flex;
+  width: 100%;
+  min-height: 44px;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  padding: 0 14px;
+  border: 0;
+  border-radius: 6px;
+  background: #ed433d;
+  color: #fff;
+  cursor: pointer;
+  font: inherit;
+  font-size: 12px;
+  font-weight: 700;
+  text-align: center;
+  text-decoration: none;
+}
+
+.payButton:hover {
+  background: #ff5a50;
+}
+
+.payButton:disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+.error {
+  color: #ff958a;
+  font-size: 12px;
+  line-height: 1.5;
+  overflow-wrap: anywhere;
+}
+
+@media (max-width: 700px) {
+  .page {
+    padding: 22px 16px 40px;
+  }
+
+  .checkoutGrid {
+    grid-template-columns: 1fr;
+  }
+}
+

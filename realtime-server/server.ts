@@ -10,9 +10,7 @@ if (!redisUrl) {
   throw new Error("REDIS_URL must be set for the realtime server");
 }
 
-const frontendOrigins = (process.env.FRONTEND_URL ?? "*")
-  .split(",")
-  .map((origin) => origin.trim());
+const frontendOrigin = "https://bookmyslot.helloharsh.me";
 
 let subscribed = false;
 
@@ -51,10 +49,7 @@ const httpServer = createServer((request, response) => {
 
 const io = new Server(httpServer, {
   cors: {
-    origin:
-      frontendOrigins.length === 1
-        ? frontendOrigins[0]
-        : frontendOrigins,
+    origin: frontendOrigin,
   },
 });
 

@@ -1,0 +1,146 @@
+.page {
+  min-height: 100vh;
+  padding: 28px clamp(18px, 6vw, 76px) 64px;
+  background:
+    radial-gradient(ellipse at 15% 0%, rgb(37 43 47 / 48%), transparent 38%),
+    #090b0d;
+  color: #f5f5f2;
+  font-family: var(--font-inter), sans-serif;
+}
+
+.backLink {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  margin-bottom: 24px;
+  color: rgb(245 245 242 / 70%);
+  font-size: 13px;
+  text-decoration: none;
+}
+
+.backLink:hover {
+  color: #ff685e;
+}
+
+.header {
+  display: flex;
+  align-items: end;
+  justify-content: space-between;
+  gap: 20px;
+  max-width: 1180px;
+  margin: 0 auto 24px;
+}
+
+.eyebrow {
+  margin: 0 0 4px;
+  color: #ff8b7d;
+  font-size: 11px;
+}
+
+.header h1 {
+  margin: 0;
+  font-family: "Coolvetica", sans-serif;
+  font-size: 36px;
+  font-weight: 400;
+}
+
+.count {
+  margin: 0 0 5px;
+  color: rgb(235 237 238 / 58%);
+  font-size: 12px;
+}
+
+.eventGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+  gap: 24px 16px;
+  max-width: 1180px;
+  margin: 0 auto;
+}
+
+.eventCard {
+  min-width: 0;
+  color: inherit;
+  text-decoration: none;
+}
+
+.eventCard:focus-visible {
+  border-radius: 7px;
+  outline: 2px solid #ff685e;
+  outline-offset: 4px;
+}
+
+.poster {
+  position: relative;
+  display: grid;
+  overflow: hidden;
+  aspect-ratio: 0.82;
+  place-items: center;
+  border: 1px solid rgb(255 255 255 / 10%);
+  border-radius: 7px;
+  background-color: #202326;
+  background-position: center;
+  background-size: cover;
+  transition: transform 180ms ease;
+}
+
+.eventCard:hover .poster {
+  transform: translateY(-3px);
+}
+
+.posterFallback {
+  padding: 18px;
+  background: linear-gradient(145deg, #4c3935, #15191c 72%);
+  font-family: "Coolvetica", sans-serif;
+  font-size: 21px;
+  text-align: center;
+}
+
+.eventInfo h2 {
+  overflow: hidden;
+  margin: 9px 0 4px;
+  font-family: "Coolvetica", sans-serif;
+  font-size: 16px;
+  font-weight: 400;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.eventInfo p,
+.eventInfo time {
+  display: block;
+  overflow: hidden;
+  margin: 0 0 4px;
+  color: rgb(235 237 238 / 58%);
+  font-size: 11px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.emptyState {
+  max-width: 1180px;
+  margin: 24px auto;
+  color: rgb(235 237 238 / 62%);
+}
+
+@media (max-width: 600px) {
+  .page {
+    padding: 22px 16px 40px;
+  }
+
+  .header h1 {
+    font-size: 30px;
+  }
+
+  .eventGrid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 20px 12px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .poster,
+  .eventCard:hover .poster {
+    transition: none;
+  }
+}
