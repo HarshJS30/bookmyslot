@@ -11,7 +11,8 @@ function isAllowedOrigin(origin: string | null): origin is string {
   return (
     origin === "https://bookmyslot.helloharsh.me" ||
     configuredOrigins.has(origin) ||
-    /^http:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/.test(origin)
+    origin === "http://localhost:3000" ||
+    origin === "http://127.0.0.1:3000"
   );
 }
 
