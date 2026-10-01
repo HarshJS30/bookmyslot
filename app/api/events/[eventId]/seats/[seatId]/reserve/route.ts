@@ -22,10 +22,19 @@ export async function POST(
 
     let updated
     try {
-        updated = await prisma.seat.update({
-            where: { id: seatId, status: "AVAILABLE" },
-            data: { status: "HELD", reservedAt: new Date() }
+        updated = await prisma.seat.updateMany({
+            where: { id: seatId, eventId: eventId,
+                OR:[
+                    {status: "AVAILABLE"},
+                    {status: "HELD", holdExpiresAt: { lt: new Date() }}
+                ]
+            },
+            data: { status: "HELD", reservedAt: new Date(), heldByUserId: session.user.id, holdExpiresAt: new Date(Date.now() + 5 * 60 * 1000) }
         })
+        if (updated.count === 0) {
+            await redis.del(lockKey)
+            return new Response("Seat is no longer available", { status: 409 })
+        }
     } catch {
         await redis.del(lockKey)
         return new Response("Seat is no longer available", { status: 409 })

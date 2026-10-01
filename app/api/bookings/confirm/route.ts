@@ -3,7 +3,6 @@ import { Prisma } from '../../../generated/prisma/client'
 import redis from '@/lib/redis'
 import prisma from '@/lib/prisma'
 
-
 export async function POST(request: Request) {
     const session = await auth()
 
@@ -17,18 +16,64 @@ export async function POST(request: Request) {
         return new Response("Missing Fields", { status: 400 })
     }
 
+    const seatIds: string[] = [...new Set<string>(body.seatIds)]
+
     const lockOwners = await Promise.all(
-        body.seatIds.map((seatId: string) => redis.get(`seat:lock:${seatId}`))
+        seatIds.map((seatId) =>
+            redis.get(`seat:lock:${seatId}`)
+        )
     )
 
-    const allOwnedByUser = lockOwners.every((owner) => owner === session.user.id)
+    const allOwnedByUser = lockOwners.every(
+        (owner) => owner === session.user.id
+    )
 
     if (!allOwnedByUser) {
-        return new Response("One or more selected seats are held by another user", { status: 409 })
+        return new Response(
+            "One or more selected seats are held by another user",
+            { status: 409 }
+        )
     }
 
     try {
         const result = await prisma.$transaction(async (tx) => {
+
+            const updated = await tx.seat.updateMany({
+                where: {
+                    id: { in: seatIds },
+                    status: "HELD",
+                    heldByUserId: session.user.id,
+                    holdExpiresAt: {
+                        gt: new Date()
+                    }
+                },
+                data: {
+                    status: "BOOKED"
+                }
+            })
+
+            if (updated.count !== seatIds.length) {
+                throw new Error(
+                    "One or more seats are no longer available"
+                )
+            }
+
+            const seatsWithPricing = await tx.seat.findMany({
+                where: {
+                    id: { in: seatIds }
+                },
+                include: {
+                    category: true
+                }
+            })
+
+            const totalAmount = seatsWithPricing
+                .reduce(
+                    (sum, seat) =>
+                        sum.plus(seat.category.price),
+                    new Prisma.Decimal(0)
+                )
+                .toNumber()
 
             const booking = await tx.booking.create({
                 data: {
@@ -38,45 +83,11 @@ export async function POST(request: Request) {
             })
 
             const bookingSeats = await tx.bookingSeat.createMany({
-                data: body.seatIds.map((seatId: string) => ({
+                data: seatIds.map((seatId) => ({
                     seatId,
                     bookingId: booking.id,
                 }))
             })
-
-            const seatsWithPricing = await tx.seat.findMany({
-                where: { id: { in: body.seatIds } },
-                include: { category: true }
-            })
-
-            const totalAmount = seatsWithPricing
-                .reduce((sum, seat) => sum.plus(seat.category.price), new Prisma.Decimal(0))
-                .toNumber()
-
-            try {
-                for (const seatId of body.seatIds) {
-                    await tx.seat.update({
-                        where: {
-                            id: seatId,
-                            status: "HELD"
-                        },
-                        data: {
-                            status: "BOOKED"
-                        }
-                    })
-                }
-            } catch (err) {
-                if (
-                    err instanceof Prisma.PrismaClientKnownRequestError &&
-                    err.code === "P2025"
-                ) {
-                    throw new Error(
-                        "One or more seats are no longer available"
-                    )
-                }
-
-                throw err
-            }
 
             const confirmedBooking = await tx.booking.update({
                 where: {
@@ -100,20 +111,32 @@ export async function POST(request: Request) {
                 booking: confirmedBooking,
                 bookingSeats,
                 payment,
-                seatsWithPricing 
+                seatsWithPricing
             }
         })
 
-        await Promise.all(body.seatIds.map((seatId: string) => redis.del(`seat:lock:${seatId}`)))
+        // The booking is committed. Nothing in Redis below may change the response.
+        try {
+            await Promise.all(
+                seatIds.map((seatId) =>
+                    redis.del(`seat:lock:${seatId}`)
+                )
+            )
+        } catch (err) {
+            console.error("Failed to release seat locks:", err)
+        }
 
         try {
             await Promise.all(
                 result.seatsWithPricing.map((seat) =>
-                    redis.publish('realtime', JSON.stringify({
-                        eventId: seat.eventId,
-                        seatId: seat.id,
-                        status: "BOOKED"
-                    }))
+                    redis.publish(
+                        'realtime',
+                        JSON.stringify({
+                            eventId: seat.eventId,
+                            seatId: seat.id,
+                            status: "BOOKED"
+                        })
+                    )
                 )
             )
         } catch (err) {
@@ -123,13 +146,20 @@ export async function POST(request: Request) {
         return Response.json(result)
 
     } catch (err) {
+
         if (
             err instanceof Error &&
             err.message === "One or more seats are no longer available"
         ) {
-            return new Response(err.message, { status: 409 })
+            return new Response(
+                err.message,
+                { status: 409 }
+            )
         }
 
-        return new Response("Internal Server Error", { status: 500 })
+        return new Response(
+            "Internal Server Error",
+            { status: 500 }
+        )
     }
 }
