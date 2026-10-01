@@ -68,6 +68,8 @@ model Seat {
   bookingSeats BookingSeat[]
   category     TicketCategory @relation("CategorySeats", fields: [categoryId, eventId], references: [id, eventId])
   event        Event          @relation(fields: [eventId], references: [id])
+  heldByUserId       String?        
+  holdExpiresAt    DateTime?     
 
   @@unique([eventId, seatLabel])
 }
