@@ -18,6 +18,8 @@ jobs:
       - name: Refresh expired seat holds on Vercel
         env:
           VERCEL_APP_URL: ${{ vars.VERCEL_APP_URL }}
+          CRON_SECRET: ${{ secrets.CRON_SECRET }}
         run: |
           test -n "$VERCEL_APP_URL" || { echo "Set the VERCEL_APP_URL repository variable"; exit 1; }
-          curl --fail --silent --show-error --max-time 30 "${VERCEL_APP_URL%/}/api/cron/refresh-all-seats"
+          test -n "$CRON_SECRET" || { echo "Set the CRON_SECRET repository secret"; exit 1; }
+          curl --fail --silent --show-error --max-time 30 -H "Authorization: Bearer $CRON_SECRET" "${VERCEL_APP_URL%/}/api/cron/refresh-all-seats"
