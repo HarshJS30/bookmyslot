@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { CreditCard } from "@phosphor-icons/react";
 import CheckoutProgress from "../CheckoutProgress";
@@ -14,21 +14,53 @@ type CheckoutSeat = {
 };
 
 export default function PaymentCheckout({
+  eventId,
   eventPath,
   seats,
 }: {
+  eventId: string;
   eventPath: string;
   seats: CheckoutSeat[];
 }) {
   const router = useRouter();
   const [isBusy, setIsBusy] = useState(false);
   const [error, setError] = useState("");
+  const [idempotencyKey] = useState(() => crypto.randomUUID());
+  const paidRef = useRef(false);
   const total = seats.reduce((sum, seat) => sum + Number(seat.price), 0);
   const formattedTotal = new Intl.NumberFormat("en-IN", {
     style: "currency",
     currency: "INR",
     maximumFractionDigits: 0,
   }).format(total);
+
+  function releaseSeats(keepalive = false) {
+    return fetch(`/api/events/${eventId}/holds`, {
+      method: "DELETE",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ seatIds: seats.map((seat) => seat.id) }),
+      keepalive,
+    });
+  }
+
+  useEffect(() => {
+    function onPageHide() {
+      if (!paidRef.current) releaseSeats(true).catch(() => {});
+    }
+    window.addEventListener("pagehide", onPageHide);
+    return () => window.removeEventListener("pagehide", onPageHide);
+  }, [eventId, seats]);
+
+  async function cancelCheckout() {
+    setIsBusy(true);
+    try {
+      await releaseSeats();
+    } catch {
+      // seats will expire on their own if this fails
+    } finally {
+      router.push(`${eventPath}/seats`);
+    }
+  }
 
   async function simulatePayment() {
     setIsBusy(true);
@@ -37,11 +69,12 @@ export default function PaymentCheckout({
     try {
       const response = await fetch("/api/bookings/confirm", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json", "Idempotency-Key": idempotencyKey },
         body: JSON.stringify({ seatIds: seats.map((seat) => seat.id) }),
       });
       if (!response.ok) throw new Error(await response.text());
 
+      paidRef.current = true;
       const result = (await response.json()) as { booking: { id: string } };
       router.push(`${eventPath}/confirmation/${result.booking.id}`);
     } catch (caught) {
@@ -93,6 +126,9 @@ export default function PaymentCheckout({
           {error && <p className={styles.error} role="alert">{error}</p>}
           <button className={styles.payButton} disabled={isBusy} onClick={simulatePayment} type="button">
             {isBusy ? "Processing demo..." : `Simulate payment · ${formattedTotal}`}
+          </button>
+          <button className={styles.clearButton} disabled={isBusy} onClick={cancelCheckout} type="button">
+            Cancel and release seats
           </button>
         </aside>
       </div>

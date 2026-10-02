@@ -4,7 +4,6 @@ import { ArrowLeft } from "@phosphor-icons/react/dist/ssr";
 import { auth } from "@/auth";
 import { eventHref } from "@/lib/event-url";
 import prisma from "@/lib/prisma";
-import redis from "@/lib/redis";
 import PaymentCheckout from "./PaymentCheckout";
 import styles from "./PaymentCheckout.module.css";
 
@@ -45,17 +44,13 @@ export default async function PaymentPage({
   }
 
   const seats = await prisma.seat.findMany({
-    where: { id: { in: seatIds }, eventId, status: "HELD" },
+    where: { id: { in: seatIds }, eventId, status: "HELD", heldByUserId: session.user.id, holdExpiresAt: { gt: new Date() } },
     include: { category: true },
     orderBy: { seatLabel: "asc" },
   });
-  const lockOwners = await Promise.all(
-    seats.map((seat) => redis.get(`seat:lock:${seat.id}`)),
-  );
 
   if (
-    seats.length !== seatIds.length ||
-    lockOwners.some((owner) => owner !== session.user.id)
+    seats.length !== seatIds.length
   ) {
     redirect(seatsPath);
   }
@@ -71,6 +66,7 @@ export default async function PaymentPage({
         <p>{event.name}</p>
       </header>
       <PaymentCheckout
+        eventId={eventId}
         eventPath={eventHref(event)}
         seats={seats.map((seat) => ({
           id: seat.id,

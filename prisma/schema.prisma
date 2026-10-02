@@ -82,6 +82,9 @@ model Booking {
   user         User          @relation(fields: [userId], references: [id])
   bookingSeats BookingSeat[]
   payment      Payment?
+  key          String?        
+
+  @@unique([userId, key])
 }
 
 model BookingSeat {

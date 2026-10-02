@@ -130,30 +130,22 @@ export default function SeatPicker({
     setIsSubmitting(true);
     setError("");
 
+    const toHold = selectedIds.filter((id) => !heldIdsRef.current.has(id));
+    toHold.forEach((id) => reservingIdsRef.current.add(id));
+
     try {
-      const held = new Set(heldIds);
-      for (const seatId of selectedIds) {
-        if (held.has(seatId)) continue;
-        reservingIdsRef.current.add(seatId);
-        try {
-          const response = await fetch(
-            `/api/events/${eventId}/seats/${seatId}/reserve`,
-            {
-            method: "POST",
-            },
-          );
-          if (!response.ok) {
-            if (response.status === 409) {
-              setSelectedIds((current) => current.filter((id) => id !== seatId));
-            }
-            throw new Error(await response.text());
-          }
-          held.add(seatId);
-          heldIdsRef.current.add(seatId);
-          setHeldIds(Array.from(held));
-        } finally {
-          reservingIdsRef.current.delete(seatId);
+      if (toHold.length) {
+        const response = await fetch(`/api/events/${eventId}/holds`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ seatIds: toHold }),
+        });
+        if (!response.ok) {
+          setSelectedIds([]);
+          throw new Error(await response.text());
         }
+        toHold.forEach((id) => heldIdsRef.current.add(id));
+        setHeldIds(Array.from(heldIdsRef.current));
       }
 
       const query = new URLSearchParams({ seatIds: selectedIds.join(",") });
@@ -161,6 +153,7 @@ export default function SeatPicker({
     } catch (caught) {
       setError(caught instanceof Error ? caught.message : "Booking could not be completed.");
     } finally {
+      toHold.forEach((id) => reservingIdsRef.current.delete(id));
       setIsSubmitting(false);
     }
   }

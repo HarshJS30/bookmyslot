@@ -10,6 +10,27 @@ export async function POST(request: Request) {
         return new Response("Unauthorized Access", { status: 401 })
     }
 
+    const key = request.headers.get("idempotency-key")
+
+    if (!key) {
+        return new Response("Missing Idempotency Key", { status: 400 })
+    }
+
+    const existingBooking = await prisma.booking.findUnique({
+        where: {
+            userId_key: {
+                userId: session.user.id,
+                key
+            }
+        }
+    })
+
+    if (existingBooking) {
+        return new Response(JSON.stringify({
+            booking: existingBooking
+        }), { status: 200 })
+    }
+
     const body = await request.json()
 
     if (!Array.isArray(body.seatIds) || body.seatIds.length === 0) {
@@ -17,24 +38,7 @@ export async function POST(request: Request) {
     }
 
     const seatIds: string[] = [...new Set<string>(body.seatIds)]
-
-    const lockOwners = await Promise.all(
-        seatIds.map((seatId) =>
-            redis.get(`seat:lock:${seatId}`)
-        )
-    )
-
-    const allOwnedByUser = lockOwners.every(
-        (owner) => owner === session.user.id
-    )
-
-    if (!allOwnedByUser) {
-        return new Response(
-            "One or more selected seats are held by another user",
-            { status: 409 }
-        )
-    }
-
+    
     try {
         const result = await prisma.$transaction(async (tx) => {
 
@@ -48,7 +52,9 @@ export async function POST(request: Request) {
                     }
                 },
                 data: {
-                    status: "BOOKED"
+                    status: "BOOKED",
+                    heldByUserId: null,
+                    holdExpiresAt: null
                 }
             })
 
@@ -79,6 +85,7 @@ export async function POST(request: Request) {
                 data: {
                     status: "PENDING",
                     userId: session.user.id,
+                    key,
                 }
             })
 
@@ -146,13 +153,28 @@ export async function POST(request: Request) {
         return Response.json(result)
 
     } catch (err) {
-
         if (
             err instanceof Error &&
             err.message === "One or more seats are no longer available"
         ) {
+            const existingBooking = await prisma.booking.findUnique({
+                where: {
+                    userId_key: {
+                        userId: session.user.id,
+                        key
+                    }
+                }
+            })
+
+            if (existingBooking) {
+                return Response.json(
+                    { booking: existingBooking },
+                    { status: 200 }
+                )
+            }
+
             return new Response(
-                err.message,
+                "One or more seats are no longer available",
                 { status: 409 }
             )
         }
