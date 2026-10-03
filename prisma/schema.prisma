@@ -72,6 +72,7 @@ model Seat {
   holdExpiresAt    DateTime?     
 
   @@unique([eventId, seatLabel])
+  @@index([status, holdExpiresAt])
 }
 
 model Booking {
