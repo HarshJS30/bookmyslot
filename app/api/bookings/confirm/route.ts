@@ -2,6 +2,7 @@ import { auth } from '@/auth'
 import { Prisma } from '../../../generated/prisma/client'
 import redis from '@/lib/redis'
 import prisma from '@/lib/prisma'
+import { seatIdsSchema } from '@/lib/validation'
 
 export async function POST(request: Request) {
     const session = await auth()
@@ -31,13 +32,22 @@ export async function POST(request: Request) {
         }), { status: 200 })
     }
 
-    const body = await request.json()
-
-    if (!Array.isArray(body.seatIds) || body.seatIds.length === 0) {
-        return new Response("Missing Fields", { status: 400 })
-    }
-
-    const seatIds: string[] = [...new Set<string>(body.seatIds)]
+    let body: unknown;
+        
+        try{
+            body = await request.json();
+        }catch(err){
+            return new Response("Invalid JSON", { status: 400 });
+        }
+    
+        const result = seatIdsSchema.safeParse(body);
+    
+        if(!result.success) {
+            return new Response("Invalid seat IDs", { status: 400 });
+        }
+    
+        const { seatIds: validatedSeatIds } = result.data;
+        const seatIds = [...new Set(validatedSeatIds)];
     
     try {
         const result = await prisma.$transaction(async (tx) => {

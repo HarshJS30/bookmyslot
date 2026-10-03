@@ -2,6 +2,7 @@ import prisma from "@/lib/prisma";
 import { auth } from "@/auth";
 import redis from "@/lib/redis";
 import { Prisma } from "../../../../generated/prisma/client";
+import { seatIdsSchema } from "@/lib/validation";
 
 export async function POST(
     request: Request,
@@ -14,21 +15,23 @@ export async function POST(
     }
 
     const { eventId } = await params;
-    const body = await request.json();
-
-    if (
-        !body.seatIds ||
-        !Array.isArray(body.seatIds) ||
-        body.seatIds.length === 0
-    ) {
-        return new Response("Missing Fields", { status: 400 });
+    let body: unknown;
+    
+    try{
+        body = await request.json();
+    }catch(err){
+        return new Response("Invalid JSON", { status: 400 });
     }
 
-    const seatIds: string[] = [...new Set<string>(body.seatIds)];
+    const result = seatIdsSchema.safeParse(body);
 
-    if (seatIds.length > 10) {
-        return new Response("Too many seats selected", { status: 400 });
+    if(!result.success) {
+        return new Response("Invalid seat IDs", { status: 400 });
     }
+
+    const { seatIds: validatedSeatIds } = result.data;
+    const seatIds = [...new Set(validatedSeatIds)];
+
 
     const acquiredSeatIds: string[] = [];
 
@@ -170,21 +173,23 @@ export async function DELETE(
     }
 
     const { eventId } = await params;
-    const body = await request.json();
-
-    if (
-        !body.seatIds ||
-        !Array.isArray(body.seatIds) ||
-        body.seatIds.length === 0
-    ) {
-        return new Response("Missing Fields", { status: 400 });
+    let body: unknown;
+    
+    try{
+        body = await request.json();
+    }catch(err){
+        return new Response("Invalid JSON", { status: 400 });
     }
 
-    const seatIds: string[] = [...new Set<string>(body.seatIds)];
+    const result = seatIdsSchema.safeParse(body);
 
-    if (seatIds.length > 10) {
-        return new Response("Too many seats selected", { status: 400 });
+    if(!result.success) {
+        return new Response("Invalid seat IDs", { status: 400 });
     }
+
+    const { seatIds: validatedSeatIds } = result.data;
+    const seatIds = [...new Set(validatedSeatIds)];
+
 
     // Release the seats and return exactly the rows that were changed.
     const releasedSeats = await prisma.$queryRaw<{ id: string }[]>`
