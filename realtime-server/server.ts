@@ -12,6 +12,10 @@ if (!redisUrl) {
 
 const frontendOrigin = process.env.FRONTEND_ORIGIN;
 
+if (!frontendOrigin) {
+  throw new Error("FRONTEND_ORIGIN must be set for the realtime server");
+}
+
 let subscribed = false;
 
 const httpServer = createServer((request, response) => {
