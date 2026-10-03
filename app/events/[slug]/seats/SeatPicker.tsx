@@ -77,6 +77,10 @@ export default function SeatPicker({
     socket.on("connect", () => {
       setConnectionState("live");
       socket.emit("join-event", eventId);
+      fetch(`/api/events/${eventId}/seats`)
+        .then((res)=>res.json())
+        .then((data: SeatData[]) => setCurrentSeats(data))
+        .catch(() => {});
     });
     socket.on("disconnect", () => setConnectionState("offline"));
     socket.on("connect_error", () => setConnectionState("offline"));
