@@ -10,7 +10,7 @@ if (!redisUrl) {
   throw new Error("REDIS_URL must be set for the realtime server");
 }
 
-const frontendOrigin = "https://bookmyslot.helloharsh.me";
+const frontendOrigin = process.env.FRONTEND_ORIGIN;
 
 let subscribed = false;
 

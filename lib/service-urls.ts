@@ -1,1 +1,1 @@
-export const realtimeServerUrl = "https://bookmyslot-wykl.onrender.com";
+export const realtimeServerUrl = process.env.NEXT_PUBLIC_REALTIME_URL;
