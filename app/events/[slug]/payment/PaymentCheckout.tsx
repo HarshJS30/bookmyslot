@@ -14,16 +14,19 @@ type CheckoutSeat = {
 };
 
 export default function PaymentCheckout({
+  holdExpiresAt,
   eventId,
   eventPath,
   seats,
 }: {
+  holdExpiresAt: string;
   eventId: string;
   eventPath: string;
   seats: CheckoutSeat[];
 }) {
   const router = useRouter();
   const [isBusy, setIsBusy] = useState(false);
+  const [leftSeconds, setLeftSeconds] = useState<number | null>(null);
   const [error, setError] = useState("");
   const [idempotencyKey] = useState(() => crypto.randomUUID());
   const paidRef = useRef(false);
@@ -50,6 +53,18 @@ export default function PaymentCheckout({
     window.addEventListener("pagehide", onPageHide);
     return () => window.removeEventListener("pagehide", onPageHide);
   }, [eventId, seats]);
+
+  useEffect(()=>{
+    function updateLeftSeconds() {
+      const remaining = Math.floor(
+        (new Date(holdExpiresAt).getTime() - Date.now()) / 1000
+      );
+      setLeftSeconds(Math.max(0, remaining));
+    }
+    updateLeftSeconds();
+    const interval = setInterval(updateLeftSeconds, 1000);
+    return () => clearInterval(interval);
+  },[holdExpiresAt])
 
   async function cancelCheckout() {
     setIsBusy(true);
@@ -104,7 +119,13 @@ export default function PaymentCheckout({
           <p className={styles.disclaimer}>
             This checkout is for demonstration only. No payment provider is contacted, no real payment method is collected, and no real charge is made.
           </p>
-          <p className={styles.holdNote}>Your selected seats are held for up to five minutes.</p>
+          <p className={styles.holdNote}>
+            {leftSeconds === null
+              ? "Checking your hold..."
+              : leftSeconds === 0
+                ? "Your hold has expired"
+                : `Your selected seats are held for ${Math.floor(leftSeconds / 60)}:${String(leftSeconds % 60).padStart(2, "0")}`}
+          </p>
         </section>
         <aside className={styles.orderPanel} aria-label="Order summary">
           <h2>Order summary</h2>
@@ -124,7 +145,7 @@ export default function PaymentCheckout({
             <strong>{formattedTotal}</strong>
           </div>
           {error && <p className={styles.error} role="alert">{error}</p>}
-          <button className={styles.payButton} disabled={isBusy} onClick={simulatePayment} type="button">
+          <button className={styles.payButton} disabled={isBusy|| leftSeconds === 0 || leftSeconds === null} onClick={simulatePayment} type="button">
             {isBusy ? "Processing demo..." : `Simulate payment · ${formattedTotal}`}
           </button>
           <button className={styles.clearButton} disabled={isBusy} onClick={cancelCheckout} type="button">

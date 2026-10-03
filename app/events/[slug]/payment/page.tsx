@@ -54,6 +54,9 @@ export default async function PaymentPage({
   ) {
     redirect(seatsPath);
   }
+  const holdExpiresAt: string = new Date(
+    Math.min(...seats.map((seat) => seat.holdExpiresAt!.getTime()))
+  ).toISOString();
 
   return (
     <main className={styles.page}>
@@ -66,6 +69,7 @@ export default async function PaymentPage({
         <p>{event.name}</p>
       </header>
       <PaymentCheckout
+        holdExpiresAt={holdExpiresAt}
         eventId={eventId}
         eventPath={eventHref(event)}
         seats={seats.map((seat) => ({
