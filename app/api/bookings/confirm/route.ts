@@ -188,7 +188,7 @@ export async function POST(request: Request) {
                 { status: 409 }
             )
         }
-
+        console.error("Error confirming booking:", err)
         return new Response(
             "Internal Server Error",
             { status: 500 }
