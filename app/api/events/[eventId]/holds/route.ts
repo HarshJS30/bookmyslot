@@ -35,6 +35,18 @@ export async function POST(
 
     const acquiredSeatIds: string[] = [];
 
+    const event = await prisma.event.findUnique({
+        where: { id: eventId },
+    });
+
+    if (!event) {
+        return new Response("Event not found", { status: 404 });
+    }
+    
+    if(event.startsAt <= new Date()){
+        return new Response("Event has already started", { status: 400 });
+    }
+
     try {
         // 1. Acquire Redis locks for all requested seats
         const lockResults = await Promise.all(

@@ -34,6 +34,18 @@ export async function POST(
 
     let revertedSeats: { id: string; eventId: string }[] = []
 
+    const started = await prisma.event.findFirst({
+        where: {
+            startsAt: { lte: new Date() },
+            seats: { some: { bookingSeats: { some: { bookingId } } } },
+        },
+        select: { id: true },
+    });
+
+    if (started) {
+        return new Response("This event has already started", { status: 400 });
+    }
+
     try {
         revertedSeats = await prisma.$transaction(async (tx) => {
             const bookingSeats = await tx.bookingSeat.findMany({

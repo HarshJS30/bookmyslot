@@ -48,6 +48,19 @@ export async function POST(request: Request) {
     
         const { seatIds: validatedSeatIds } = result.data;
         const seatIds = [...new Set(validatedSeatIds)];
+
+        const startedSeat = await prisma.seat.findFirst({
+            where: {
+                id: { in: seatIds },
+                event: { startsAt: { lte: new Date() } },
+            },
+            select: { id: true },
+        });
+
+        if (startedSeat) {
+            return new Response("This event has already started", { status: 400 });
+        }
+
     
     try {
         const result = await prisma.$transaction(async (tx) => {
