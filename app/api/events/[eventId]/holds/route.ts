@@ -3,6 +3,7 @@ import { auth } from "@/auth";
 import redis from "@/lib/redis";
 import { Prisma } from "../../../../generated/prisma/client";
 import { seatIdsSchema } from "@/lib/validation";
+import { SeatsUnavailableError } from "@/lib/errors";
 
 export async function POST(
     request: Request,
@@ -16,22 +17,21 @@ export async function POST(
 
     const { eventId } = await params;
     let body: unknown;
-    
-    try{
+
+    try {
         body = await request.json();
-    }catch(err){
+    } catch {
         return new Response("Invalid JSON", { status: 400 });
     }
 
     const result = seatIdsSchema.safeParse(body);
 
-    if(!result.success) {
+    if (!result.success) {
         return new Response("Invalid seat IDs", { status: 400 });
     }
 
     const { seatIds: validatedSeatIds } = result.data;
     const seatIds = [...new Set(validatedSeatIds)];
-
 
     const acquiredSeatIds: string[] = [];
 
@@ -42,8 +42,8 @@ export async function POST(
     if (!event) {
         return new Response("Event not found", { status: 404 });
     }
-    
-    if(event.startsAt <= new Date()){
+
+    if (event.startsAt <= new Date()) {
         return new Response("Event has already started", { status: 400 });
     }
 
@@ -61,14 +61,14 @@ export async function POST(
             )
         );
 
-        // 2. Record the locks we successfully acquired
+        // 2. Record successfully acquired locks
         seatIds.forEach((seatId, index) => {
             if (lockResults[index] === "OK") {
                 acquiredSeatIds.push(seatId);
             }
         });
 
-        // 3. If any lock failed, release the ones we acquired
+        // 3. If any lock failed, release the locks we acquired
         if (acquiredSeatIds.length !== seatIds.length) {
             await Promise.all(
                 acquiredSeatIds.map(async (seatId) => {
@@ -88,39 +88,43 @@ export async function POST(
         }
 
         // 4. Claim all seats atomically in the database
-        const result = await prisma.$transaction(async (tx) => {
-            const updated = await tx.seat.updateMany({
-                where: {
-                    id: { in: seatIds },
-                    eventId,
-                    OR: [
-                        {
-                            status: "AVAILABLE",
-                        },
-                        {
-                            status: "HELD",
-                            holdExpiresAt: {
-                                lt: new Date(),
+        const result = await prisma.$transaction(
+            async (tx) => {
+                const updated = await tx.seat.updateMany({
+                    where: {
+                        id: { in: seatIds },
+                        eventId,
+                        OR: [
+                            { status: "AVAILABLE" },
+                            {
+                                status: "HELD",
+                                holdExpiresAt: {
+                                    lt: new Date(),
+                                },
                             },
-                        },
-                    ],
-                },
-                data: {
-                    status: "HELD",
-                    reservedAt: new Date(),
-                    heldByUserId: session.user.id,
-                    holdExpiresAt: new Date(
-                        Date.now() + 5 * 60 * 1000
-                    ),
-                },
-            });
+                        ],
+                    },
+                    data: {
+                        status: "HELD",
+                        reservedAt: new Date(),
+                        heldByUserId: session.user.id,
+                        holdExpiresAt: new Date(
+                            Date.now() + 5 * 60 * 1000
+                        ),
+                    },
+                });
 
-            if (updated.count !== seatIds.length) {
-                throw new Error("SEAT_UPDATE_FAILED");
+                if (updated.count !== seatIds.length) {
+                    throw new SeatsUnavailableError();
+                }
+
+                return updated;
+            },
+            {
+                maxWait: 10_000,
+                timeout: 10_000,
             }
-
-            return updated;
-        });
+        );
 
         // 5. Notify realtime server
         try {
@@ -144,22 +148,26 @@ export async function POST(
             status: 200,
         });
     } catch (error) {
-        // 6. Release Redis locks if DB operation failed
-        await Promise.all(
-            acquiredSeatIds.map(async (seatId) => {
-                const key = `seat:lock:${seatId}`;
-                const owner = await redis.get(key);
+        // 6. Attempt Redis cleanup without masking the original error
+        try {
+            await Promise.all(
+                acquiredSeatIds.map(async (seatId) => {
+                    const key = `seat:lock:${seatId}`;
+                    const owner = await redis.get(key);
 
-                if (owner === session.user.id) {
-                    await redis.del(key);
-                }
-            })
-        );
+                    if (owner === session.user.id) {
+                        await redis.del(key);
+                    }
+                })
+            );
+        } catch (cleanupError) {
+            console.error(
+                "Failed to release Redis locks after hold failure:",
+                cleanupError
+            );
+        }
 
-        if (
-            error instanceof Error &&
-            error.message === "SEAT_UPDATE_FAILED"
-        ) {
+        if (error instanceof SeatsUnavailableError) {
             return new Response(
                 "One or more selected seats are no longer available",
                 { status: 409 }
@@ -167,6 +175,18 @@ export async function POST(
         }
 
         console.error("Failed to hold seats:", error);
+
+        if (
+            error instanceof Prisma.PrismaClientKnownRequestError &&
+            error.code === "P2028"
+        ) {
+            return new Response("Server Busy. Please retry.", {
+                status: 503,
+                headers: {
+                    "Retry-After": "1",
+                },
+            });
+        }
 
         return new Response("Internal Server Error", {
             status: 500,
@@ -186,24 +206,23 @@ export async function DELETE(
 
     const { eventId } = await params;
     let body: unknown;
-    
-    try{
+
+    try {
         body = await request.json();
-    }catch(err){
+    } catch {
         return new Response("Invalid JSON", { status: 400 });
     }
 
     const result = seatIdsSchema.safeParse(body);
 
-    if(!result.success) {
+    if (!result.success) {
         return new Response("Invalid seat IDs", { status: 400 });
     }
 
     const { seatIds: validatedSeatIds } = result.data;
     const seatIds = [...new Set(validatedSeatIds)];
 
-
-    // Release the seats and return exactly the rows that were changed.
+    // Release seats and return exactly the rows that changed.
     const releasedSeats = await prisma.$queryRaw<{ id: string }[]>`
         UPDATE "Seat"
         SET

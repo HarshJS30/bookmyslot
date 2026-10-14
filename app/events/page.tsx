@@ -3,6 +3,7 @@ import { ArrowLeft } from "@phosphor-icons/react/dist/ssr";
 import prisma from "@/lib/prisma";
 import { eventHref } from "@/lib/event-url";
 import styles from "./Events.module.css";
+export const dynamic = "force-dynamic";
 
 export default async function EventsPage() {
   const events = await prisma.event.findMany({

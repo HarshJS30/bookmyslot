@@ -19,7 +19,7 @@
 
 # production
 /build
-/scripts
+loadtest/data.json
 
 # misc
 .DS_Store
