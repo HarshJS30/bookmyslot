@@ -67,7 +67,7 @@ Median latency dropped as copies were added, but p95 stayed around 2 to 3 s. On 
 | Route | Result |
 | --- | --- |
 | `/api/health` (no auth, no database), 4 copies, 200 users | 213 req/s in the first run, 436 req/s in the second |
-| `/api/whoami` (auth only) | 208 req/s peak |
+| `/api/whoami` (auth only, temporary route removed after measuring) | 208 req/s peak |
 
 The two `/api/health` runs differ by 2x on identical settings, which shows how noisy a shared laptop is. Treat the 208 req/s figure as a rough observation, not a stable limit.
 
@@ -120,11 +120,14 @@ None of these are done or tested.
 
 ## 7. Reproduce
 
-```bash
-docker compose up --build
+```powershell
+docker compose up -d --build --scale app=4
+# point this terminal at the LOCAL stack first (a .env file may hold real URLs)
+$env:DATABASE_URL="postgresql://postgres:postgres@localhost:5433/mydatabase"
+$env:REDIS_URL="redis://localhost:6379"
 npx prisma migrate deploy
 # seed (example)
-USERS=1000 SEATS=5000 npx tsx scripts/load-seed.ts
+$env:USERS="1000"; $env:SEATS="5000"; npx tsx scripts/load-seed.ts
 # then run the k6 scripts in loadtest/ (one-seat-fight.js, seat-traffic.js) against http://nginx
 ```
 

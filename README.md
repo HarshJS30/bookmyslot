@@ -4,7 +4,6 @@ A BookMyShow-style seat booking system built to answer one question: **what happ
 
 Live demo: https://bookmyslot.helloharsh.me
 
-<!-- demo GIF goes here after the frontend polish: ![demo](docs/demo.gif) -->
 
 ## Result in one paragraph
 
@@ -36,7 +35,7 @@ Across 20 rounds of a 1,000-user, single-seat contention test, exactly one user 
 Two layers, and the database is the one that decides.
 
 1. **Redis lock (fast rejection).** `SET seat-lock NX EX` lets only one request in. Everyone else gets 409 immediately without touching Postgres.
-2. **Conditional database update (the real guarantee).** Holds and confirms are `updateMany` calls with the status and holder in the `WHERE` clause, and the code checks the affected row count. If the count is wrong, the whole transaction throws and rolls back. Even if Redis were wrong or down, two users still cannot both own a seat.
+2. **Conditional database update (the real guarantee).** Holds and confirms are `updateMany` calls with the status and holder in the `WHERE` clause, and the code checks the affected row count. If the count is wrong, the whole transaction throws and rolls back. Even if a Redis lock were wrong (my tests forge one), two users still cannot both own a seat. What happens when Redis is fully down is not tested yet, see the known limitations.
 
 Other decisions worth knowing:
 
@@ -109,7 +108,7 @@ On this laptop, throughput stops improving after the third copy, most likely bec
 ## Where the bottleneck is (measured, not guessed)
 
 1. `docker stats` during the fight: the four app containers each ran at about 100 to 175% CPU, while Postgres (about 17 to 24%), Redis and nginx sat nearly idle.
-2. Baseline: `/api/whoami`, a route that only authenticates and responds, topped out at 208 req/s. The hold route reached 112 to 182 req/s, so the hold logic itself adds very little.
+2. Baseline: `/api/whoami`, a temporary route that only authenticated and responded (removed after measuring, so this one cannot be reproduced from the repo), topped out at 208 req/s. The hold route reached 112 to 182 req/s, so the hold logic itself adds very little.
 
 Conclusion: the evidence points to CPU saturation in the Node.js request path in this test environment. Database-backed authentication (a session lookup through Prisma on every request) and Prisma's JavaScript-side query work are plausible contributors, but I have not isolated their individual costs. The same data suggests the Redis lock, the hold transaction, Postgres, nginx and the pool size were not the limit.
 
@@ -128,22 +127,37 @@ Conclusion: the evidence points to CPU saturation in the Node.js request path in
 - The load tests use a fresh idempotency key per confirm, so simultaneous retries are covered by `test-confirm.ts` and not by the load tests.
 - An expired database hold can stay blocked by a live Redis lock until the lock's TTL runs out. This only delays a booking and never causes a double booking.
 - Lock release is not atomic yet (needs a Lua compare-and-delete).
-- Payment is simulated.
+- Payment is simulated. A real provider would need a pending payment state, webhook confirmation, and seats kept held until the provider confirms, so a declined payment never turns into a confirmed booking.
+- Tests are not in CI yet. The only workflow is a keep-alive cron.
+- No rate limiting and no cap on how many seats one user can hold in total.
+- The organizer routes (events, ticket categories, seats) do not use zod validation the way holds and confirm do.
+- If Redis is unreachable, I expect holds to fail with an error instead of double booking. I have not tested that, and there is no database-only fallback.
 - Benchmarks should be rerun with k6 on a separate machine to remove the self-competition.
 
 ## Run it locally
 
-```bash
-# 1. start the stack (postgres, redis, realtime, app copies, nginx)
-docker compose up --build
+The tests create and delete data, so run them only against the local stack. A `.env` file may point at a real database, so set the three variables in step 2 in the same terminal before running anything else.
 
-# 2. apply migrations to the local Postgres
+```powershell
+# 1. start the stack (postgres, redis, realtime, 4 app copies behind nginx)
+docker compose up -d --build --scale app=4
+
+# 2. point this terminal at the LOCAL stack
+$env:DATABASE_URL="postgresql://postgres:postgres@localhost:5433/mydatabase"
+$env:REDIS_URL="redis://localhost:6379"
+$env:BASE_URL="http://localhost:8080"
+
+# 3. apply migrations to the local Postgres
 npx prisma migrate deploy
 
-# 3. run the tests against http://localhost:8080 (nginx)
-npx tsx --env-file=.env scripts/test-p0.ts
-npx tsx --env-file=.env scripts/test-break.ts
-npx tsx --env-file=.env scripts/test-confirm.ts
+# 4. run the tests through nginx
+npx tsx scripts/test-p0.ts
+npx tsx scripts/test-break.ts
+
+# 5. test-confirm needs a fresh seed first
+$env:USERS="200"; $env:SEATS="5000"
+npx tsx scripts/load-seed.ts
+npx tsx scripts/test-confirm.ts
 ```
 
 Load tests live in `loadtest/` (`one-seat-fight.js`, `seat-traffic.js`). Seed with `scripts/load-seed.ts` first (for example `USERS=1000 SEATS=5000`). On Windows, run the k6 Docker command from PowerShell.
