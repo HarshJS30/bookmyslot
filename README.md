@@ -3,7 +3,11 @@
 A BookMyShow-style seat booking system built to answer one question: **what happens when 1,000 people try to grab the same seat at the same time?**
 
 Live demo: https://bookmyslot.helloharsh.me
+Demo video: https://youtu.be/SpmFF-cpmIQ
 
+[![Watch the demo](https://img.youtube.com/vi/SpmFF-cpmIQ/maxresdefault.jpg)](https://youtu.be/SpmFF-cpmIQ)
+
+Benchmarks, methods and the experiments that failed: [BENCHMARKS.md](BENCHMARKS.md)
 
 ## Result in one paragraph
 
