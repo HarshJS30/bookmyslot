@@ -6,7 +6,6 @@ const BASE = process.env.BASE_URL ?? "http://localhost:3000"
 const RUN = randomUUID().slice(0, 8) // tags every test row so cleanup finds only ours
 let failures = 0
 
-// CHANGE THIS if your batch route lives somewhere else.
 // POST = hold seats, DELETE = release seats. Body: { seatIds: string[] }
 const holdsPath = (eventId: string) => `/api/events/${eventId}/holds`
 

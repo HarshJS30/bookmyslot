@@ -5,6 +5,7 @@ import { auth, signIn } from "@/auth";
 import { eventHref } from "@/lib/event-url";
 import prisma from "@/lib/prisma";
 import styles from "./Bookings.module.css";
+import PageHeader from "../components/PageHeader";
 
 export default async function BookingsPage() {
   const session = await auth();
@@ -16,6 +17,8 @@ export default async function BookingsPage() {
 
   if (!session?.user?.id) {
     return (
+      <>
+      <PageHeader />
       <main className={styles.page}>
         <Link className={styles.backLink} href="/">
           <ArrowLeft size={16} aria-hidden="true" /> Back to home
@@ -31,6 +34,7 @@ export default async function BookingsPage() {
           </form>
         </section>
       </main>
+      </>
     );
   }
 
@@ -53,6 +57,8 @@ export default async function BookingsPage() {
   });
 
   return (
+    <>
+    <PageHeader />
     <main className={styles.page}>
       <Link className={styles.backLink} href="/">
         <ArrowLeft size={16} aria-hidden="true" /> Back to home
@@ -165,5 +171,6 @@ export default async function BookingsPage() {
         </section>
       )}
     </main>
+    </>
   );
 }

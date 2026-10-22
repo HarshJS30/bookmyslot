@@ -1,9 +1,15 @@
 .page {
+  --accent: #f43f4b;
+  --accent-soft: #ff8b7d;
+  --card: rgb(17 20 23 / 90%);
+  --card-line: rgb(255 255 255 / 10%);
+  --page-bg: #090b0d;
+
   min-height: 100vh;
-  padding: 28px clamp(18px, 6vw, 76px) 64px;
+  padding: 28px clamp(16px, 5vw, 76px) 64px;
   background:
     radial-gradient(ellipse at 15% 0%, rgb(37 43 47 / 48%), transparent 38%),
-    #090b0d;
+    var(--page-bg);
   color: #f5f5f2;
   font-family: var(--font-inter), sans-serif;
 }
@@ -13,13 +19,24 @@
   align-items: center;
   gap: 7px;
   margin-bottom: 20px;
-  color: rgb(245 245 242 / 70%);
+  padding: 8px 14px 8px 11px;
+  border: 1px solid var(--card-line);
+  border-radius: 999px;
+  background: var(--card);
+  color: rgb(245 245 242 / 78%);
   font-size: 13px;
   text-decoration: none;
+  transition: color 140ms ease, border-color 140ms ease;
 }
 
 .backLink:hover {
-  color: #ff8b7d;
+  border-color: rgb(255 255 255 / 22%);
+  color: #fff;
+}
+
+.backLink:focus-visible {
+  outline: 2px solid var(--accent-soft);
+  outline-offset: 3px;
 }
 
 .header,
@@ -29,20 +46,24 @@
 }
 
 .header {
-  margin-bottom: 25px;
+  margin-bottom: 18px;
 }
 
 .eyebrow {
   margin: 0 0 6px;
-  color: rgb(235 237 238 / 58%);
+  color: var(--accent-soft);
   font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
 }
 
 .header h1 {
   margin: 0;
   font-family: "Coolvetica", sans-serif;
-  font-size: 34px;
+  font-size: clamp(30px, 4vw, 40px);
   font-weight: 400;
+  letter-spacing: -0.01em;
 }
 
 .header > p:last-child {
@@ -53,25 +74,85 @@
 
 .checkoutGrid {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) 320px;
+  grid-template-columns: minmax(0, 1fr) 330px;
   align-items: start;
-  gap: 20px;
+  gap: 18px;
 }
+
+/* ---------- event card ---------- */
+
+.eventSummary {
+  display: flex;
+  width: min(100%, 940px);
+  min-height: 96px;
+  align-items: center;
+  gap: 14px;
+  margin: 0 auto 18px;
+  padding: 10px;
+  border: 1px solid var(--card-line);
+  border-radius: 24px;
+  background: var(--card);
+}
+
+.eventPoster {
+  display: grid;
+  width: 64px;
+  height: 76px;
+  flex: 0 0 64px;
+  place-items: center;
+  overflow: hidden;
+  border-radius: 16px;
+  background: #25292c;
+  object-fit: cover;
+}
+
+.eventPosterFallback {
+  background: linear-gradient(145deg, #5a2a30, #15191c 72%);
+  font-family: "Coolvetica", sans-serif;
+  font-size: 25px;
+}
+
+.eventSummaryText {
+  display: grid;
+  min-width: 0;
+  gap: 4px;
+  font-size: 12px;
+}
+
+.eventSummaryText strong {
+  overflow: hidden;
+  font-family: "Coolvetica", sans-serif;
+  font-size: 18px;
+  font-weight: 400;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.eventSummaryText span,
+.eventSummaryText time,
+.eventSummaryText small {
+  overflow: hidden;
+  color: rgb(235 237 238 / 62%);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* ---------- payment panel ---------- */
 
 .paymentPanel,
 .orderPanel {
-  border: 1px solid rgb(255 255 255 / 10%);
-  border-radius: 8px;
-  background: rgb(17 20 23 / 90%);
-  padding: 20px;
+  border: 1px solid var(--card-line);
+  border-radius: 28px;
+  background: var(--card);
+  padding: 22px;
 }
 
 .panelHeading {
   display: flex;
   align-items: center;
-  gap: 9px;
+  gap: 10px;
   margin-bottom: 18px;
-  color: #ff8b7d;
+  color: var(--accent-soft);
 }
 
 .panelHeading h2,
@@ -79,26 +160,53 @@
   margin: 0;
   color: #f5f5f2;
   font-family: "Coolvetica", sans-serif;
-  font-size: 20px;
+  font-size: 21px;
   font-weight: 400;
 }
 
 .demoMethod {
   display: flex;
-  min-height: 64px;
+  min-height: 68px;
   align-items: center;
-  gap: 11px;
-  padding: 12px;
-  border: 1px solid rgb(255 255 255 / 14%);
-  border-radius: 6px;
-  background: rgb(255 255 255 / 3%);
+  gap: 12px;
+  padding: 13px 14px;
+  border: 1px solid var(--accent);
+  border-radius: 20px;
+  background: rgb(244 63 75 / 8%);
 }
 
+.methodList { display: grid; gap: 9px; }
+.methodOption {
+  display: flex; width: 100%; min-height: 62px; align-items: center; gap: 11px;
+  padding: 10px 12px; border: 1px solid rgb(255 255 255 / 9%); border-radius: 13px;
+  background: #151719; color: #f5f5f2; text-align: left; cursor: pointer;
+  transition: border-color 160ms ease, background-color 160ms ease, box-shadow 180ms var(--ease-out), filter 120ms ease-out;
+}
+.methodOption:hover { border-color: rgb(255 255 255 / 17%); }
+.methodSelected:hover { border-color: var(--accent); }
+.methodSelected { border-color: var(--accent) !important; background: rgb(244 63 75 / 8%); box-shadow: 0 0 0 1px var(--accent); }
+button.methodOption:active:not(:disabled) { scale: 1; transform: none; filter: brightness(.94); }
+.methodOption > .radio { display: grid; width: 14px; height: 14px; flex: 0 0 14px; place-items: center; border: 1px solid #697176; border-radius: 50%; background: #101214; transition: border-color 160ms ease; }
+.methodOption > .radio::after { width: 6px; height: 6px; border-radius: 50%; background: var(--accent); content: ""; opacity: 0; scale: .45; transition: opacity 120ms ease-out, scale 180ms var(--ease-out); }
+.methodSelected > .radio { border-color: var(--accent); }
+.methodSelected > .radio::after { opacity: 1; scale: 1; }
+.methodName { display: grid; min-width: 0; flex: 1; gap: 3px; }
+.methodName strong { color: #f5f5f2; font-size: 13px; }
+.methodName small { color: rgb(235 237 238 / 56%); font-size: 10px; }
+.methodLogos { display: flex; flex: 0 0 auto; align-items: center; gap: 5px; }
+.methodLogos > span { display: grid; width: 34px; height: 24px; flex: 0 0 34px; place-items: center; overflow: hidden; border: 1px solid var(--card-line); border-radius: 6px; background: #fff; }
+.methodLogos img { display: block; width: 18px; height: 18px; object-fit: contain; }
+.methodLogos em { color: #1b1b1b; font-size: 8px; font-style: normal; font-weight: 700; }
+.bankMark { color: #a5afb5; }
+.simulatedNote { display: flex; align-items: center; gap: 9px; margin-top: 14px; color: rgb(235 237 238 / 58%); font-size: 11px; line-height: 1.5; }
+.simulatedNote .demoBadge { flex: 0 0 auto; padding: 4px 7px; border-color: rgb(255 139 125 / 45%); color: var(--accent-soft); font-weight: 700; letter-spacing: .04em; }
+.secureNote { display:flex; align-items:center; justify-content:center; gap:4px; margin: 9px 0 0; color: rgb(235 237 238 / 52%); font-size: 10px; text-align: center; }
+
 .radio {
-  width: 15px;
-  height: 15px;
-  flex: 0 0 15px;
-  border: 4px solid #ff685e;
+  width: 16px;
+  height: 16px;
+  flex: 0 0 16px;
+  border: 4px solid var(--accent);
   border-radius: 50%;
   background: #f5f5f2;
 }
@@ -116,32 +224,61 @@
 
 .demoMethod small,
 .seatLine small {
-  color: rgb(235 237 238 / 54%);
+  color: rgb(235 237 238 / 56%);
   font-size: 11px;
 }
 
 .demoBadge {
-  padding: 4px 6px;
-  border: 1px solid rgb(255 139 125 / 40%);
-  border-radius: 4px;
-  color: #ff8b7d;
-  font-size: 9px;
+  padding: 5px 10px;
+  border: 1px solid rgb(255 139 125 / 45%);
+  border-radius: 999px;
+  color: var(--accent-soft);
+  font-size: 10px;
+  white-space: nowrap;
 }
 
 .disclaimer {
   margin: 16px 0 0;
-  color: rgb(235 237 238 / 56%);
+  color: rgb(235 237 238 / 58%);
   font-size: 12px;
   line-height: 1.6;
 }
 
+/* the hold countdown: a pill with a pulsing coral dot */
 .holdNote {
-  margin: 15px 0 0;
-  padding-top: 13px;
-  border-top: 1px solid rgb(255 255 255 / 9%);
-  color: rgb(235 237 238 / 57%);
-  font-size: 11px;
-  line-height: 1.5;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 18px 0 0;
+  padding: 11px 16px;
+  border: 1px solid rgb(255 139 125 / 28%);
+  border-radius: 999px;
+  background: rgb(244 63 75 / 7%);
+  color: rgb(255 214 209 / 90%);
+  font-size: 12px;
+  line-height: 1.4;
+}
+
+.holdNote::before {
+  content: "";
+  width: 8px;
+  height: 8px;
+  flex: 0 0 8px;
+  border-radius: 50%;
+  background: var(--accent);
+  box-shadow: 0 0 0 0 rgb(244 63 75 / 55%);
+  animation: hold-pulse 1.8s ease-out infinite;
+}
+
+@keyframes hold-pulse {
+  70% { box-shadow: 0 0 0 8px rgb(244 63 75 / 0%); }
+  100% { box-shadow: 0 0 0 0 rgb(244 63 75 / 0%); }
+}
+
+/* ---------- order summary: a ticket with a tear line ---------- */
+
+.orderPanel {
+  overflow: hidden;
 }
 
 .orderPanel h2 {
@@ -153,7 +290,7 @@
   gap: 13px;
   max-height: 230px;
   overflow-y: auto;
-  padding: 0 2px 16px 0;
+  padding: 0 2px 20px 0;
 }
 
 .seatLine,
@@ -170,9 +307,13 @@
   gap: 3px;
 }
 
+.seatLine strong {
+  font-size: 13px;
+}
+
 .seatLine > span:last-child {
   flex: 0 0 auto;
-  color: rgb(235 237 238 / 75%);
+  color: rgb(235 237 238 / 78%);
 }
 
 .seatLine small {
@@ -180,39 +321,108 @@
 }
 
 .totalLine {
-  margin: 0 0 15px;
-  padding-top: 14px;
-  border-top: 1px solid rgb(255 255 255 / 11%);
+  position: relative;
+  margin: 0 0 18px;
+  padding-top: 20px;
+  border-top: 2px dashed rgb(255 255 255 / 14%);
   font-size: 14px;
+}
+
+/* half-circle notches on both sides of the tear line */
+.totalLine::before,
+.totalLine::after {
+  content: "";
+  position: absolute;
+  top: -12px;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: var(--page-bg);
+}
+
+.totalLine::before {
+  left: -33px;
+}
+
+.totalLine::after {
+  right: -33px;
+}
+
+.totalLine strong:last-child {
+  font-family: "Coolvetica", sans-serif;
+  font-size: 28px;
+  font-weight: 400;
+  letter-spacing: -0.01em;
 }
 
 .payButton {
   display: inline-flex;
   width: 100%;
-  min-height: 44px;
+  min-height: 50px;
   align-items: center;
   justify-content: center;
   gap: 7px;
-  padding: 0 14px;
+  padding: 0 16px;
   border: 0;
-  border-radius: 6px;
-  background: #ed433d;
+  border-radius: 999px;
+  background: var(--accent);
   color: #fff;
   cursor: pointer;
   font: inherit;
-  font-size: 12px;
+  font-size: 14px;
   font-weight: 700;
   text-align: center;
   text-decoration: none;
+  transition: background-color 140ms ease, transform 120ms ease, opacity 140ms ease;
 }
 
-.payButton:hover {
-  background: #ff5a50;
+.payButton:hover:not(:disabled) {
+  background: #ff5967;
+}
+
+.payButton:active:not(:disabled) {
+  transform: scale(0.98);
 }
 
 .payButton:disabled {
   cursor: not-allowed;
-  opacity: 0.6;
+  opacity: 0.55;
+}
+
+/* "Cancel and release seats": a quiet outlined pill under the pay button */
+.clearButton {
+  display: inline-flex;
+  width: 100%;
+  min-height: 44px;
+  align-items: center;
+  justify-content: center;
+  margin-top: 10px;
+  padding: 0 16px;
+  border: 1px solid var(--card-line);
+  border-radius: 999px;
+  background: transparent;
+  color: rgb(235 237 238 / 78%);
+  cursor: pointer;
+  font: inherit;
+  font-size: 13px;
+  transition: background-color 140ms ease, border-color 140ms ease, opacity 140ms ease;
+}
+
+.clearButton:hover:not(:disabled) {
+  border-color: rgb(255 255 255 / 30%);
+  background: rgb(255 255 255 / 5%);
+  color: #fff;
+}
+
+.clearButton:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
+.payButton:focus-visible,
+.clearButton:focus-visible {
+  outline: 2px solid var(--accent-soft);
+  outline-offset: 3px;
 }
 
 .error {
@@ -222,13 +432,39 @@
   overflow-wrap: anywhere;
 }
 
+/* ---------- responsive ---------- */
+
 @media (max-width: 700px) {
   .page {
-    padding: 22px 16px 40px;
+    padding: 22px 14px 40px;
   }
 
   .checkoutGrid {
     grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 430px) {
+  .methodOption { gap: 8px; padding: 9px; }
+  .methodLogos { gap: 3px; }
+  .methodLogos > span { width: 30px; height: 22px; flex-basis: 30px; }
+  .methodLogos img { width: 17px; height: 17px; }
+  .methodName small { font-size: 9px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .payButton,
+  .clearButton,
+  .backLink {
+    transition: none;
+  }
+
+  .holdNote::before {
+    animation: none;
+  }
+
+  .payButton:active:not(:disabled) {
+    transform: none;
   }
 }
 

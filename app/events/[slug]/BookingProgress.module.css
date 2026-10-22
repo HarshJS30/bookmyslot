@@ -4,6 +4,8 @@
   margin: 0 auto 24px;
 }
 
+/* ---------- full stepper (600px and up) ---------- */
+
 .progress {
   display: flex;
   margin: 0;
@@ -16,20 +18,34 @@
   display: grid;
   flex: 1;
   justify-items: center;
-  gap: 7px;
+  gap: 8px;
   color: rgb(235 237 238 / 48%);
-  font-size: 11px;
+  font-size: 12px;
   text-align: center;
 }
 
-.progressStep:not(:last-child)::after {
+/* the track between two markers, and the coral fill that grows over it */
+.progressStep:not(:last-child)::after,
+.complete:not(:last-child)::before {
   position: absolute;
-  top: 13px;
-  left: calc(50% + 19px);
+  top: 12.5px;
   right: calc(-50% + 19px);
-  height: 1px;
-  background: rgb(255 255 255 / 17%);
+  left: calc(50% + 19px);
+  height: 2px;
+  border-radius: 2px;
   content: "";
+}
+
+.progressStep:not(:last-child)::after {
+  background: rgb(255 255 255 / 17%);
+}
+
+/* every step is its own page, so on load the line fills from the previous step */
+.complete:not(:last-child)::before {
+  z-index: 1;
+  background: #ed433d;
+  transform-origin: left;
+  animation: line-fill 600ms var(--ease-out, ease) 120ms both;
 }
 
 .marker {
@@ -57,27 +73,102 @@
   color: #fff;
 }
 
-.complete:not(:last-child)::after {
-  background: #ed433d;
+/* the current marker pops in once the line has reached it */
+.current .marker {
+  box-shadow: 0 0 0 5px rgb(237 67 61 / 18%);
+  animation: marker-in 480ms cubic-bezier(0.34, 1.56, 0.64, 1) 520ms both;
 }
+
+.current:first-child .marker { animation-delay: 80ms; }
 
 .cancelled .marker {
   border-color: #ff8b7d;
   background: #ff8b7d;
+  box-shadow: 0 0 0 5px rgb(255 139 125 / 18%);
+  animation:
+    marker-in 480ms cubic-bezier(0.34, 1.56, 0.64, 1) 520ms both,
+    nudge 360ms ease 1000ms both;
 }
 
-@media (max-width: 480px) {
-  .progressStep {
-    font-size: 10px;
-  }
+@keyframes line-fill {
+  from { transform: scaleX(0); }
+  to { transform: scaleX(1); }
+}
 
-  .progressStep:not(:last-child)::after {
-    left: calc(50% + 17px);
-    right: calc(-50% + 17px);
+@keyframes marker-in {
+  from {
+    border-color: rgb(255 255 255 / 25%);
+    background: #121518;
+    box-shadow: 0 0 0 0 transparent;
+    color: rgb(255 255 255 / 70%);
+    scale: 0.6;
   }
+}
 
-  .marker {
-    width: 25px;
-    height: 25px;
+@keyframes nudge {
+  0%, 100% { translate: 0; }
+  25% { translate: -3px; }
+  75% { translate: 3px; }
+}
+
+/* ---------- compact version (phones) ---------- */
+
+.compact,
+.compactBar {
+  display: none;
+}
+
+.compact {
+  align-items: baseline;
+  justify-content: space-between;
+  margin: 0 0 8px;
+  color: rgb(235 237 238 / 58%);
+  font-size: 12px;
+}
+
+.compact strong {
+  color: #f5f5f2;
+  font-weight: 600;
+}
+
+.compactBar {
+  gap: 4px;
+}
+
+.segment {
+  position: relative;
+  height: 4px;
+  flex: 1;
+  overflow: hidden;
+  border-radius: 2px;
+  background: rgb(255 255 255 / 14%);
+}
+
+.segmentDone { background: #ed433d; }
+
+.segmentCurrent::after {
+  position: absolute;
+  inset: 0;
+  background: #ed433d;
+  content: "";
+  transform-origin: left;
+  animation: line-fill 600ms var(--ease-out, ease) 100ms both;
+}
+
+.navCancelled .segmentCurrent::after { background: #ff8b7d; }
+
+@media (max-width: 600px) {
+  .progressNav { margin-bottom: 18px; }
+  .progress { display: none; }
+  .compact { display: flex; }
+  .compactBar { display: flex; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .complete:not(:last-child)::before,
+  .current .marker,
+  .cancelled .marker,
+  .segmentCurrent::after {
+    animation: none;
   }
 }

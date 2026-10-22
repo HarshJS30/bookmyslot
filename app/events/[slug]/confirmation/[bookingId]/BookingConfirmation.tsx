@@ -1,8 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useState, type CSSProperties } from "react";
 import Link from "next/link";
-import { ArrowRight, CheckCircle, X, XCircle } from "@phosphor-icons/react";
+import { ArrowLeft, ArrowRight, X, XCircle } from "@phosphor-icons/react";
 import CheckoutProgress from "../../CheckoutProgress";
 import styles from "./BookingConfirmation.module.css";
 
@@ -39,6 +39,8 @@ export default function BookingConfirmation({
   const [status, setStatus] = useState(initialStatus);
   const [isCancelling, setIsCancelling] = useState(false);
   const [error, setError] = useState("");
+  const animateSuccess = initialStatus === "CONFIRMED";
+  const cancelled = status === "CANCELLED";
   const formattedTotal = new Intl.NumberFormat("en-IN", {
     style: "currency",
     currency: "INR",
@@ -63,26 +65,48 @@ export default function BookingConfirmation({
     }
   }
 
-  const cancelled = status === "CANCELLED";
+  const reveal = (delay: number): CSSProperties => ({ "--reveal-delay": `${delay}ms` } as CSSProperties);
 
   return (
-    <>
+    <main className={styles.pageShell}>
+      <header className={styles.pageTop}>
+        <Link className={styles.backLink} href={eventPath}>
+          <ArrowLeft size={16} aria-hidden="true" /> Back to event
+        </Link>
+        <span>Upcoming event</span>
+      </header>
       <CheckoutProgress step={3} cancelled={cancelled} />
-      <main className={styles.confirmation}>
+      <section className={styles.confirmation}>
         <header className={`${styles.statusHeader} ${cancelled ? styles.cancelled : ""}`}>
-          {cancelled ? <XCircle size={42} /> : <CheckCircle size={42} />}
-          <h1>{cancelled ? "Booking cancelled" : "Booking confirmed"}</h1>
-          <p>
+          {cancelled ? (
+            <XCircle size={42} aria-hidden="true" />
+          ) : (
+            <span
+              className={`${styles.successMark} ${animateSuccess ? styles.successMarkAnimated : ""}`}
+              role="img"
+              aria-label="Payment successful"
+            >
+              <svg viewBox="0 0 96 96" aria-hidden="true">
+                <path pathLength="1" d="M30 50l13 13 23-26" />
+              </svg>
+            </span>
+          )}
+          <h1 className={animateSuccess && !cancelled ? styles.reveal : undefined} style={animateSuccess && !cancelled ? reveal(850) : undefined}>
+            {cancelled ? "Booking cancelled" : "Booking confirmed"}
+          </h1>
+          <p className={animateSuccess && !cancelled ? styles.reveal : undefined} style={animateSuccess && !cancelled ? reveal(950) : undefined}>
             {cancelled
               ? "The booking is cancelled and the seats have been released."
               : "Your demo payment was successful. No real payment was taken."}
           </p>
         </header>
-        <section className={styles.reference} aria-label="Booking reference">
-          <span>Booking reference</span>
-          <strong>{bookingId}</strong>
-        </section>
-        <section className={styles.ticket} aria-label="Booked event and seats">
+
+        <section
+          className={`${styles.ticket} ${animateSuccess && !cancelled ? styles.reveal : ""}`}
+          style={animateSuccess && !cancelled ? reveal(1050) : undefined}
+          aria-label="Booked event and seats"
+        >
+          <p className={styles.ticketEyebrow}>YOUR BOOKING TICKET</p>
           <div className={styles.eventSummary}>
             <div
               aria-label={eventImageUrl ? `${eventName} poster` : undefined}
@@ -93,10 +117,14 @@ export default function BookingConfirmation({
               {!eventImageUrl && eventName.slice(0, 1)}
             </div>
             <div>
+              <span className={styles.detailLabel}>EVENT</span>
               <h2>{eventName}</h2>
               <p>{location}</p>
-              <time>{eventTime}</time>
             </div>
+          </div>
+          <div className={styles.ticketMeta}>
+            <div><span className={styles.detailLabel}>DATE &amp; TIME</span><time>{eventTime}</time></div>
+            <div><span className={styles.detailLabel}>TICKETS</span><strong>{seats.length} {seats.length === 1 ? "ticket" : "tickets"}</strong></div>
           </div>
           <div className={styles.ticketRows}>
             {seats.map((seat) => (
@@ -113,12 +141,18 @@ export default function BookingConfirmation({
             ))}
           </div>
           <div className={styles.totalRow}>
-            <span>{cancelled ? "Booking total" : "Demo total"}</span>
+            <span>{cancelled ? "Booking total" : "Paid with demo payment"}</span>
             <strong>{formattedTotal}</strong>
           </div>
+          <div className={styles.bookingCode}>
+            <span className={styles.detailLabel}>BOOKING REFERENCE</span>
+            <strong>{bookingId}</strong>
+            <div className={styles.barcode} aria-hidden="true" />
+          </div>
         </section>
+
         {error && <p className={styles.error} role="alert">{error}</p>}
-        <footer className={styles.actions}>
+        <footer className={`${styles.actions} ${animateSuccess && !cancelled ? styles.reveal : ""}`} style={animateSuccess && !cancelled ? reveal(1500) : undefined}>
           {!cancelled && (
             <button
               className={styles.cancelButton}
@@ -133,7 +167,7 @@ export default function BookingConfirmation({
             Back to event <ArrowRight size={16} aria-hidden="true" />
           </Link>
         </footer>
-      </main>
-    </>
+      </section>
+    </main>
   );
 }

@@ -1,0 +1,510 @@
+.section {
+  margin-top: 64px;
+  font-family: var(--font-inter), sans-serif;
+}
+
+.intro {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 4px;
+  margin-bottom: 24px;
+}
+
+.intro h2 {
+  margin: 0;
+  color: #f6f6f5;
+  font-size: clamp(21px, 2.1vw, 27px);
+  font-weight: 700;
+  letter-spacing: -0.045em;
+  line-height: 1.08;
+}
+
+.intro p {
+  margin: 0;
+  color: #aeb1b5;
+  font-size: 13px;
+}
+
+.layout {
+  --step-duration: 6000ms; /* time each step stays on screen */
+  display: grid;
+  grid-template-columns: minmax(280px, 0.8fr) 1.2fr;
+  align-items: center;
+  gap: clamp(24px, 4vw, 64px);
+}
+
+/* ---------- steps ---------- */
+
+.steps {
+  display: grid;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.step {
+  position: relative;
+  display: block;
+  width: 100%;
+  padding: 18px 0 18px 28px;
+  border: 0;
+  background: none;
+  color: rgb(255 255 255 / 42%);
+  cursor: pointer;
+  font: inherit;
+  text-align: left;
+  transition: color 200ms ease;
+}
+
+.step:hover { color: rgb(255 255 255 / 75%); }
+
+.stepActive,
+.stepActive:hover { color: #fff; }
+
+.step:focus-visible {
+  border-radius: 8px;
+  outline: 2px solid #ff8b7d;
+  outline-offset: 2px;
+}
+
+.rail {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  width: 2px;
+  overflow: hidden;
+  border-radius: 2px;
+  background: rgb(255 255 255 / 10%);
+}
+
+.progress {
+  position: absolute;
+  inset: 0;
+  background: #ff685e;
+  transform-origin: top;
+  animation: fill var(--step-duration) linear both;
+  animation-play-state: paused;
+}
+
+/* run only while the section is on screen; pause on hover and keyboard focus */
+.layout[data-playing="true"] .progress { animation-play-state: running; }
+
+@media (hover: hover) {
+  .layout:hover .progress { animation-play-state: paused; }
+}
+
+.layout:has(.step:focus-visible) .progress { animation-play-state: paused; }
+
+@keyframes fill {
+  from { transform: scaleY(0); }
+  to { transform: scaleY(1); }
+}
+
+.stepHead {
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+}
+
+.stepNumber {
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.08em;
+}
+
+.stepTitle {
+  font-size: clamp(18px, 1.8vw, 22px);
+  font-weight: 600;
+  letter-spacing: -0.03em;
+}
+
+/* the body slides open with grid rows, so no height math */
+.stepBody {
+  display: grid;
+  grid-template-rows: 0fr;
+  opacity: 0;
+  transition: grid-template-rows 320ms var(--ease-out, ease), opacity 240ms ease;
+}
+
+.stepBody > span {
+  min-height: 0;
+  overflow: hidden;
+  padding: 0 0 0 28px;
+  color: #aeb1b5;
+  font-size: 14px;
+  line-height: 1.55;
+}
+
+.stepActive .stepBody {
+  grid-template-rows: 1fr;
+  opacity: 1;
+}
+
+.stepActive .stepBody > span { padding-top: 8px; }
+
+/* ---------- stage ---------- */
+
+.stage {
+  position: relative;
+  display: grid;
+  min-height: 380px;
+  place-items: center;
+  overflow: hidden;
+  padding: 28px;
+  border: 1px solid rgb(255 255 255 / 10%);
+  border-radius: 24px;
+  background:
+    radial-gradient(ellipse 80% 60% at 50% 120%, rgb(255 104 94 / 12%), transparent 70%),
+    #0b0e10;
+}
+
+.stageGrid {
+  position: absolute;
+  inset: 0;
+  background-image: radial-gradient(rgb(255 255 255 / 7%) 1px, transparent 1px);
+  background-size: 18px 18px;
+  -webkit-mask-image: radial-gradient(ellipse at center, #000 25%, transparent 75%);
+  mask-image: radial-gradient(ellipse at center, #000 25%, transparent 75%);
+}
+
+.sceneWrap {
+  position: relative;
+  width: min(100%, 360px);
+}
+
+.scene {
+  display: grid;
+  gap: 14px;
+  color: #fff;
+}
+
+.number {
+  font-size: 18px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+/* ---------- step 1: find ---------- */
+
+.miniSearch {
+  display: flex;
+  min-height: 48px;
+  align-items: center;
+  gap: 10px;
+  padding: 0 16px;
+  border: 1px solid rgb(255 255 255 / 22%);
+  border-radius: 999px;
+  background: rgb(12 14 18 / 80%);
+  font-size: 15px;
+}
+
+.miniSearch svg { color: rgb(255 255 255 / 70%); }
+
+.caret {
+  display: inline-block;
+  width: 1.5px;
+  height: 1.1em;
+  margin-left: 2px;
+  background: #ff685e;
+  vertical-align: -0.15em;
+  animation: blink 1s steps(1) infinite;
+}
+
+@keyframes blink { 50% { opacity: 0; } }
+
+.miniResult {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 4px 12px;
+  padding: 12px 14px;
+  border: 1px solid rgb(255 255 255 / 10%);
+  border-radius: 14px;
+  background: rgb(255 255 255 / 7%);
+}
+
+.miniResult strong {
+  overflow: hidden;
+  font-size: 14px;
+  font-weight: 500;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.miniResult span {
+  grid-column: 1;
+  color: rgb(255 255 255 / 60%);
+  font-size: 12px;
+}
+
+.miniResult time {
+  grid-column: 2;
+  grid-row: 1 / span 2;
+  align-self: center;
+  color: #ff8b7d;
+  font-size: 13px;
+}
+
+.miniChip {
+  justify-self: start;
+  padding: 8px 14px;
+  border-radius: 999px;
+  background: #f43f4b;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+/* ---------- step 2: seats ---------- */
+
+.seatHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  color: rgb(255 255 255 / 60%);
+  font-size: 12px;
+}
+
+.live {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: #ff8b7d;
+}
+
+.pulseDot {
+  position: relative;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #ff685e;
+}
+
+.pulseDot::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  background: inherit;
+  animation: ping 1.6s ease-out infinite;
+}
+
+@keyframes ping {
+  to { opacity: 0; transform: scale(2.8); }
+}
+
+.screen {
+  width: 70%;
+  height: 4px;
+  margin: 0 auto 2px;
+  border-radius: 999px;
+  background: linear-gradient(90deg, transparent, rgb(255 255 255 / 60%), transparent);
+  box-shadow: 0 8px 24px rgb(255 104 94 / 25%);
+}
+
+.seatGrid {
+  display: grid;
+  grid-template-columns: repeat(9, 1fr);
+  gap: 7px;
+}
+
+.seat {
+  aspect-ratio: 1;
+  border-radius: 6px 6px 3px 3px;
+  background: rgb(255 255 255 / 16%);
+  transition: background-color 200ms ease;
+}
+
+.seatTaken { background: rgb(255 255 255 / 5%); }
+.seatPicked { background: #ff685e; }
+
+.seatSummary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 14px;
+  border-radius: 14px;
+  background: rgb(255 255 255 / 7%);
+  font-size: 13px;
+}
+
+/* ---------- step 3: pay ---------- */
+
+.payCard {
+  display: grid;
+  gap: 16px;
+  padding: 18px;
+  border: 1px solid rgb(255 255 255 / 10%);
+  border-radius: 18px;
+  background: rgb(255 255 255 / 6%);
+}
+
+.payTop {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.payTag {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: rgb(255 255 255 / 62%);
+  font-size: 12px;
+}
+
+.payTop .payTag:first-child { color: #ff8b7d; }
+
+.payRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  color: rgb(255 255 255 / 70%);
+  font-size: 13px;
+}
+
+.payButton {
+  display: grid;
+  min-height: 48px;
+  place-items: center;
+  border-radius: 999px;
+  background: #f43f4b;
+  color: #fff;
+  font-size: 15px;
+  font-weight: 600;
+  transition: background-color 240ms ease, color 240ms ease;
+}
+
+.payButtonDone {
+  background: #2fd48f;
+  color: #04140d;
+}
+
+.btnDone {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.btnSpinner {
+  display: block;
+  width: 18px;
+  height: 18px;
+  border: 2px solid rgb(255 255 255 / 40%);
+  border-top-color: #fff;
+  border-radius: 50%;
+  animation: spin 700ms linear infinite;
+}
+
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* ---------- step 4: ticket ---------- */
+
+.ticket {
+  display: grid;
+  grid-template-columns: 1fr 28%;
+  overflow: hidden;
+  border-radius: 18px;
+  background: #15191c;
+  /* real notches where the stub tears off */
+  -webkit-mask:
+    radial-gradient(circle 9px at 72% 0, #0000 98%, #000) top / 100% 51% no-repeat,
+    radial-gradient(circle 9px at 72% 100%, #0000 98%, #000) bottom / 100% 51% no-repeat;
+  mask:
+    radial-gradient(circle 9px at 72% 0, #0000 98%, #000) top / 100% 51% no-repeat,
+    radial-gradient(circle 9px at 72% 100%, #0000 98%, #000) bottom / 100% 51% no-repeat;
+}
+
+.ticketMain {
+  display: grid;
+  align-content: center;
+  gap: 5px;
+  padding: 18px 16px 18px 20px;
+  border-right: 2px dashed rgb(255 255 255 / 14%);
+}
+
+.ticketLabel {
+  color: #ff6b73;
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+}
+
+.ticketMain strong {
+  font-size: 16px;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  line-height: 1.2;
+}
+
+.ticketMain span:not(.ticketLabel) {
+  color: rgb(255 255 255 / 62%);
+  font-size: 12px;
+}
+
+.ticketSeats { color: #fff !important; }
+
+.ticketStub {
+  display: grid;
+  place-items: center;
+  padding: 12px;
+  background: #f4f4f2;
+}
+
+.qr {
+  display: grid;
+  width: 100%;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 2px;
+}
+
+.qr i {
+  aspect-ratio: 1;
+  border-radius: 1.5px;
+  background: transparent;
+}
+
+.qr i[data-on="true"] { background: #0b0c0e; }
+
+.toasts {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.toast {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 12px;
+  border: 1px solid rgb(255 255 255 / 12%);
+  border-radius: 999px;
+  background: rgb(255 255 255 / 8%);
+  color: rgb(255 255 255 / 85%);
+  font-size: 12px;
+}
+
+.toast svg { color: #ff8b7d; }
+
+/* ---------- responsive ---------- */
+
+@media (max-width: 800px) {
+  .section { margin-top: 48px; }
+  .layout { grid-template-columns: 1fr; gap: 20px; }
+  .stage { min-height: 340px; padding: 20px; }
+}
+
+/* ---------- reduced motion: no autoplay, no ambient loops ---------- */
+
+@media (prefers-reduced-motion: reduce) {
+  .progress { animation: none; transform: scaleY(1); }
+  .stepBody,
+  .step,
+  .seat,
+  .payButton { transition: none; }
+  .caret,
+  .pulseDot::after { animation: none; }
+  .btnSpinner { animation-duration: 2s; }
+}

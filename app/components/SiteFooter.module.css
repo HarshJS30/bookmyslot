@@ -1,0 +1,194 @@
+.footer {
+  margin-top: auto;
+  padding: clamp(20px, 4vw, 34px) clamp(12px, 3vw, 40px) clamp(12px, 3vw, 32px);
+  background: #080a0c;
+  color: #f5f5f2;
+  font-family: var(--font-inter), sans-serif;
+}
+
+.panel {
+  --panel: #cf2c3a;
+  position: relative;
+  width: min(100%, 1320px);
+  min-width: 0;
+  margin: 0 auto;
+  overflow: hidden;
+  border-radius: 170px 28px 28px 170px;
+  background: var(--panel);
+  padding: clamp(32px, 4vw, 52px) clamp(28px, 5vw, 72px) 0 clamp(60px, 9vw, 150px);
+}
+
+.top {
+  display: grid;
+  grid-template-columns: minmax(200px, 1.4fr) auto minmax(180px, 1fr);
+  gap: clamp(28px, 5vw, 72px);
+  align-items: start;
+}
+
+.tagline {
+  max-width: 16ch;
+  margin: 0 0 10px;
+  font-size: clamp(17px, 1.7vw, 22px);
+  font-weight: 700;
+  letter-spacing: -0.03em;
+  line-height: 1.15;
+}
+
+.small {
+  max-width: 34ch;
+  margin: 6px 0 0;
+  color: rgb(255 255 255 / 74%);
+  font-size: 11px;
+  line-height: 1.5;
+}
+
+.links {
+  display: flex;
+  gap: clamp(32px, 5vw, 72px);
+}
+
+.links > div {
+  display: grid;
+  align-content: start;
+  gap: 10px;
+}
+
+.links h2,
+.proof h2 {
+  margin: 0 0 4px;
+  color: #fff;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.links a {
+  color: rgb(255 255 255 / 90%);
+  font-size: 13px;
+  text-decoration: none;
+}
+
+.links a:focus-visible {
+  outline: 2px solid #fff;
+  outline-offset: 3px;
+}
+
+.proof ul {
+  display: grid;
+  gap: 8px;
+  margin: 8px 0 14px;
+  padding: 0;
+  list-style: none;
+  font-size: 13px;
+}
+
+.proof li::before {
+  content: "";
+  display: inline-block;
+  width: 6px;
+  height: 6px;
+  margin-right: 10px;
+  border-radius: 50%;
+  background: #fff;
+  vertical-align: middle;
+}
+
+.built {
+  margin: 0;
+  color: rgb(255 255 255 / 74%);
+  font-size: 11px;
+}
+
+.built a {
+  color: #fff;
+  text-underline-offset: 3px;
+}
+
+.built a:focus-visible,
+.wordmark:focus-visible {
+  outline: 2px solid #fff;
+  outline-offset: 4px;
+}
+
+.wordmark {
+  display: block;
+  margin-top: clamp(8px, 2vw, 28px);
+  padding-bottom: 0.12em;
+  color: #f5f5f2;
+  font-family: var(--font-display, var(--font-inter)), sans-serif;
+  font-size: clamp(48px, 12.5vw, 176px);
+  font-weight: 900;
+  letter-spacing: -0.055em;
+  line-height: 0.9;
+  text-decoration: none;
+  white-space: nowrap;
+  text-align: center;
+}
+
+.wordmark span {
+  color: inherit;
+}
+
+@media (max-width: 900px) {
+  .panel {
+    border-radius: 80px 24px 24px 80px;
+    padding-left: 56px;
+  }
+
+  .top {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .brand {
+    grid-column: 1 / -1;
+  }
+}
+
+@media (max-width: 560px) {
+  .panel {
+    width: min(100%, 480px);
+    border-radius: 50% 50% 0 0 / clamp(86px, 30vw, 126px) clamp(86px, 30vw, 126px) 0 0;
+    padding: clamp(74px, 26vw, 96px) clamp(16px, 6vw, 22px) 0;
+  }
+
+  .top {
+    grid-template-columns: 1fr;
+    gap: 22px;
+  }
+
+  .links {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 20px;
+  }
+
+  .links > div {
+    min-width: 0;
+    gap: 8px;
+  }
+
+  .links a,
+  .proof ul {
+    font-size: 12px;
+  }
+
+  .tagline {
+    max-width: 22ch;
+    font-size: clamp(18px, 5vw, 22px);
+  }
+
+  .wordmark {
+    margin-top: 20px;
+    font-family: "Coolvetica", var(--font-inter), sans-serif;
+    font-size: clamp(36px, 12vw, 64px);
+    letter-spacing: 0.01em;
+  }
+}
+
+@media (max-width: 350px) {
+  .footer { padding-right: 8px; padding-left: 8px; }
+  .panel { padding-right: 14px; padding-left: 14px; }
+  .links { gap: 12px; }
+  .links a { font-size: 11px; }
+}

@@ -1,62 +1,50 @@
-import Link from "next/link";
-import { ArrowLeft } from "@phosphor-icons/react/dist/ssr";
 import prisma from "@/lib/prisma";
-import { eventHref } from "@/lib/event-url";
 import styles from "./Events.module.css";
+import EventBrowser, { type BrowserEvent } from "./EventBrowser";
+import PageHeader from "../components/PageHeader";
 export const dynamic = "force-dynamic";
 
-export default async function EventsPage() {
+export default async function EventsPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ city?: string | string[] }>;
+}) {
+  const params = await searchParams;
+  const selectedCity = Array.isArray(params.city) ? params.city[0] : params.city;
   const events = await prisma.event.findMany({
-    include: { venue: true },
+    include: {
+      venue: true,
+      organizer: { select: { name: true } },
+      ticketCategories: { select: { price: true } },
+      seats: { select: { status: true } },
+    },
     orderBy: { startsAt: "asc" },
   });
+  const browserEvents: BrowserEvent[] = events.map((event) => ({
+    id: event.id,
+    name: event.name,
+    imageUrl: event.imageUrl,
+    description: event.description,
+    startsAt: event.startsAt.toISOString(),
+    category: event.category,
+    organizerName: event.organizer.name,
+    isSoldOut: event.seats.length > 0 && event.seats.every((seat) => seat.status === "BOOKED"),
+    popularityCount: event.seats.filter((seat) => seat.status === "BOOKED").length,
+    lowestPrice: event.ticketCategories.length
+      ? Math.min(...event.ticketCategories.map((category) => Number(category.price)))
+      : null,
+    venue: {
+      name: event.venue.name,
+      location: event.venue.location,
+    },
+  }));
 
   return (
+    <>
+    <PageHeader />
     <main className={styles.page}>
-      <Link className={styles.backLink} href="/#now-showing">
-        <ArrowLeft size={16} aria-hidden="true" /> Back to home
-      </Link>
-      <header className={styles.header}>
-        <div>
-          <p className={styles.eyebrow}>BookMySlot</p>
-          <h1>All events</h1>
-        </div>
-        <p className={styles.count}>{events.length} {events.length === 1 ? "event" : "events"}</p>
-      </header>
-      {events.length ? (
-        <div className={styles.eventGrid}>
-          {events.map((event) => (
-            <Link className={styles.eventCard} href={eventHref(event)} key={event.id}>
-              {event.imageUrl ? (
-                <div
-                  className={styles.poster}
-                  role="img"
-                  aria-label={`${event.name} event poster`}
-                  style={{ backgroundImage: `url("${event.imageUrl}")` }}
-                />
-              ) : (
-                <div className={`${styles.poster} ${styles.posterFallback}`}>
-                  <span>{event.name}</span>
-                </div>
-              )}
-              <div className={styles.eventInfo}>
-                <h2>{event.name}</h2>
-                <p>{event.venue.name} · {event.venue.location}</p>
-                <time dateTime={event.startsAt.toISOString()}>
-                  {event.startsAt.toLocaleDateString(undefined, {
-                    weekday: "short",
-                    month: "short",
-                    day: "numeric",
-                    year: "numeric",
-                  })}
-                </time>
-              </div>
-            </Link>
-          ))}
-        </div>
-      ) : (
-        <p className={styles.emptyState}>No events are listed yet.</p>
-      )}
+      <EventBrowser events={browserEvents} initialCity={selectedCity ?? ""} />
     </main>
+    </>
   );
 }

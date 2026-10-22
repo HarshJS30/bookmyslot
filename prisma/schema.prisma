@@ -27,6 +27,7 @@ model Event {
   name             String
   description      String?
   imageUrl         String?
+  category         EventCategory @default(OTHER)
   durationMinutes  Int?
   venue            Venue @relation(fields: [venueId], references: [id])
   startsAt         DateTime
@@ -38,6 +39,15 @@ model Event {
 
   @@index([organizerId])
   @@index([venueId])
+}
+
+enum EventCategory {
+  MOVIES
+  CONCERTS
+  COMEDY
+  THEATRE
+  SPORTS
+  OTHER
 }
 
 model TicketCategory {

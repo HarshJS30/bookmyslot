@@ -150,15 +150,20 @@ $env:BASE_URL="http://localhost:8080"
 # 3. apply migrations to the local Postgres
 npx prisma migrate deploy
 
-# 4. run the tests through nginx
+# 4. seed the homepage events, ticket tiers and available seats
+npm run seed:homepage
+
+# 5. run the tests through nginx
 npx tsx scripts/test-p0.ts
 npx tsx scripts/test-break.ts
 
-# 5. test-confirm needs a fresh seed first
+# 6. test-confirm needs a fresh seed first
 $env:USERS="200"; $env:SEATS="5000"
 npx tsx scripts/load-seed.ts
 npx tsx scripts/test-confirm.ts
 ```
+
+`npm run seed:homepage` creates or refreshes the nine event listings shown on the homepage, including venues, ticket prices and available seats. Check that `DATABASE_URL` points to the intended database before running it.
 
 Load tests live in `loadtest/` (`one-seat-fight.js`, `seat-traffic.js`). Seed with `scripts/load-seed.ts` first (for example `USERS=1000 SEATS=5000`). On Windows, run the k6 Docker command from PowerShell.
 

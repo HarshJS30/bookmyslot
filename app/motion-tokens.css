@@ -1,0 +1,54 @@
+/*
+  motion-tokens.css
+  Put next to your globals.css and import it once, before anything else:
+    import "./motion-tokens.css";   // in app/layout.tsx
+*/
+
+:root {
+  --ease-out: cubic-bezier(0.2, 0.7, 0.2, 1);
+  --ease-in-out: cubic-bezier(0.65, 0, 0.35, 1);
+
+  /* durations */
+  --dur-fast: 120ms;
+  --dur-base: 180ms;
+  --dur-slow: 300ms;
+
+  /* press feedback */
+  --press-scale: 0.97;
+  --press-scale-small: 0.92; /* icon buttons, chips */
+
+  --accent: #ff685e;
+  --accent-soft: #ff8b7d;
+  --accent-strong: #f34f57;
+
+  /* shape */
+  --radius-pill: 999px;
+  --radius-card: 12px;
+
+  /* focus */
+  --focus-ring: 2px solid var(--accent-soft);
+}
+
+/*
+  Press feedback for every enabled button.
+  Uses the individual `scale` property, so it never fights the
+  `transform: translateY(...)` hover lifts already on your cards.
+*/
+button:not(:disabled):active,
+[data-press]:active {
+  scale: var(--press-scale);
+}
+
+/* Hover lifts should not stick on touch screens. Use this pattern: */
+/*
+@media (hover: hover) and (pointer: fine) {
+  .liveCard:hover { transform: translateY(-2px); }
+}
+*/
+
+@media (prefers-reduced-motion: reduce) {
+  button:not(:disabled):active,
+  [data-press]:active {
+    scale: 1;
+  }
+}

@@ -1,10 +1,44 @@
-.confirmation {
-  width: min(100%, 720px);
-  margin: 0 auto;
-  padding: 22px;
+.pageShell {
+  width: 100%;
+  min-height: 100vh;
+  padding: 24px clamp(16px, 5vw, 76px) 56px;
+}
+
+.pageTop {
+  display: flex;
+  width: min(100%, 940px);
+  align-items: center;
+  justify-content: space-between;
+  margin: 0 auto 24px;
+}
+
+.pageTop > span {
+  color: rgb(235 237 238 / 58%);
+  font-size: 12px;
+}
+
+.backLink {
+  display: inline-flex;
+  min-height: 38px;
+  align-items: center;
+  gap: 7px;
+  padding: 0 13px;
   border: 1px solid rgb(255 255 255 / 10%);
-  border-radius: 8px;
-  background: rgb(17 20 23 / 92%);
+  border-radius: 999px;
+  background: rgb(17 20 23 / 90%);
+  color: rgb(245 245 242 / 82%);
+  font-size: 12px;
+  text-decoration: none;
+}
+
+.backLink:hover {
+  border-color: rgb(255 255 255 / 22%);
+  color: #fff;
+}
+
+.confirmation {
+  width: min(100%, 480px);
+  margin: 0 auto;
   color: #f5f5f2;
   font-family: var(--font-inter), sans-serif;
 }
@@ -13,22 +47,54 @@
   display: grid;
   justify-items: center;
   gap: 9px;
-  padding: 6px 0 21px;
+  padding: 12px 0 22px;
   text-align: center;
+  animation: content-rise 400ms ease-out both;
 }
 
-.statusHeader > svg {
+.successMark {
+  display: grid;
+  width: 96px;
+  height: 96px;
+  place-items: center;
+  margin: 0 auto 5px;
+  border-radius: 50%;
+  background: rgb(84 217 149 / 12%);
   color: #54d995;
+}
+
+.successMarkAnimated {
+  animation: mark-spring 500ms cubic-bezier(.34, 1.56, .64, 1) 200ms both;
+}
+
+.successMark svg {
+  width: 100%;
+  height: 100%;
+}
+
+.successMark path {
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 5;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-dasharray: 1;
+  stroke-dashoffset: 1;
+}
+
+.successMarkAnimated path {
+  animation: mark-draw 350ms ease-out 550ms forwards;
 }
 
 .statusHeader h1 {
   margin: 0;
   font-family: "Coolvetica", sans-serif;
-  font-size: 27px;
+  font-size: clamp(26px, 6vw, 32px);
   font-weight: 400;
 }
 
 .statusHeader p {
+  max-width: 360px;
   margin: 0;
   color: rgb(235 237 238 / 63%);
   font-size: 12px;
@@ -36,35 +102,36 @@
 }
 
 .cancelled > svg {
+  margin-bottom: 5px;
   color: #ff8b7d;
 }
 
-.reference {
-  display: grid;
-  gap: 5px;
-  margin-bottom: 12px;
-  padding: 14px;
-  border: 1px solid rgb(255 255 255 / 8%);
-  border-radius: 6px;
-  background: rgb(255 255 255 / 2%);
-}
-
-.reference span {
-  color: rgb(235 237 238 / 55%);
-  font-size: 11px;
-}
-
-.reference strong {
-  overflow-wrap: anywhere;
-  font-family: var(--font-geist-mono), monospace;
-  font-size: 13px;
+.reveal {
+  animation: content-rise 450ms ease-out var(--reveal-delay, 0ms) both;
 }
 
 .ticket {
-  padding: 14px;
-  border: 1px solid rgb(255 255 255 / 8%);
-  border-radius: 6px;
-  background: rgb(255 255 255 / 2%);
+  padding: 18px;
+  border: 1px solid rgb(255 255 255 / 9%);
+  border-radius: 18px;
+  background: linear-gradient(145deg, rgb(255 255 255 / 4%), rgb(255 255 255 / 1%));
+}
+
+.ticketEyebrow {
+  margin: 0 0 14px;
+  color: #ff8b7d;
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: .14em;
+}
+
+.detailLabel {
+  display: block;
+  margin-bottom: 4px;
+  color: rgb(235 237 238 / 48%);
+  font-size: 8px;
+  font-weight: 600;
+  letter-spacing: .1em;
 }
 
 .eventSummary {
@@ -72,17 +139,17 @@
   grid-template-columns: 64px minmax(0, 1fr);
   align-items: center;
   gap: 12px;
-  padding-bottom: 14px;
-  border-bottom: 1px solid rgb(255 255 255 / 8%);
+  padding-bottom: 16px;
+  border-bottom: 1px dashed rgb(255 255 255 / 15%);
 }
 
 .poster {
   display: grid;
   width: 64px;
-  aspect-ratio: 0.78;
+  aspect-ratio: .78;
   place-items: center;
   overflow: hidden;
-  border-radius: 5px;
+  border-radius: 8px;
   background-color: #25292c;
   background-position: center;
   background-size: cover;
@@ -101,13 +168,24 @@
   font-weight: 400;
 }
 
-.eventSummary p,
-.eventSummary time {
-  display: block;
+.eventSummary p {
   margin: 3px 0 0;
   color: rgb(235 237 238 / 61%);
   font-size: 11px;
   line-height: 1.4;
+}
+
+.ticketMeta {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  padding: 14px 0 2px;
+}
+
+.ticketMeta time,
+.ticketMeta strong {
+  color: #f5f5f2;
+  font-size: 11px;
 }
 
 .ticketRows {
@@ -145,6 +223,30 @@
   font-size: 17px;
 }
 
+.bookingCode {
+  display: grid;
+  gap: 5px;
+  margin-top: 14px;
+  padding-top: 13px;
+  border-top: 1px dashed rgb(255 255 255 / 15%);
+  text-align: center;
+}
+
+.bookingCode > strong {
+  overflow-wrap: anywhere;
+  font-family: var(--font-geist-mono), monospace;
+  font-size: 11px;
+}
+
+.barcode {
+  width: min(100%, 280px);
+  height: 42px;
+  justify-self: center;
+  margin-top: 6px;
+  background: repeating-linear-gradient(90deg, #f5f5f2 0 2px, transparent 2px 4px, #f5f5f2 4px 5px, transparent 5px 8px, #f5f5f2 8px 12px, transparent 12px 14px);
+  opacity: .8;
+}
+
 .error {
   margin: 13px 0 0;
   color: #ff958a;
@@ -169,7 +271,7 @@
   gap: 7px;
   padding: 0 14px;
   border: 1px solid rgb(255 255 255 / 15%);
-  border-radius: 6px;
+  border-radius: 999px;
   background: transparent;
   color: #f5f5f2;
   cursor: pointer;
@@ -190,15 +292,41 @@
 
 .cancelButton:disabled {
   cursor: wait;
-  opacity: 0.6;
+  opacity: .6;
+}
+
+@keyframes mark-spring {
+  from { transform: scale(0); }
+  to { transform: scale(1); }
+}
+
+@keyframes mark-draw {
+  to { stroke-dashoffset: 0; }
+}
+
+@keyframes content-rise {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@media (max-width: 600px) {
+  .pageShell { padding: 18px 14px 40px; }
+  .pageTop { margin-bottom: 18px; }
+  .confirmation { width: min(100%, 480px); }
 }
 
 @media (max-width: 520px) {
-  .confirmation {
-    padding: 16px;
+  .actions > * { flex: 1 1 100%; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .statusHeader,
+  .successMarkAnimated,
+  .successMarkAnimated path,
+  .reveal,
+  .actions {
+    animation: none;
   }
 
-  .actions > * {
-    flex: 1 1 100%;
-  }
+  .successMarkAnimated path { stroke-dashoffset: 0; }
 }

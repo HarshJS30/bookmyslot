@@ -10,7 +10,8 @@
   position: absolute;
   inset: 0 0 auto;
   z-index: 3;
-  display: flex;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
   align-items: center;
   justify-content: space-between;
   height: 88px;
@@ -22,15 +23,52 @@
 }
 
 .navGroup {
+  grid-column: 2;
+  grid-row: 1;
   display: flex;
   align-items: center;
   gap: clamp(14px, 2vw, 28px);
   min-height: 50px;
   padding: 0 22px;
-  border: 1.5px solid rgb(255 255 255 / 82%);
+  border: 1px solid rgb(255 255 255 / 12%);
   border-radius: 999px;
-  background: rgb(18 18 18 / 12%);
-  backdrop-filter: blur(8px);
+  background: rgb(16 17 19 / 88%);
+  backdrop-filter: blur(10px);
+}
+
+.mobileMenu { display: none; }
+.visuallyHidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+}
+
+@media (max-width: 760px) {
+  .mobileMenu summary > span:not(.visuallyHidden) {
+    transition: transform 220ms cubic-bezier(0.2, 0.7, 0.2, 1), opacity 160ms ease;
+  }
+
+  .mobileMenu[open] summary > span:nth-child(1) {
+    transform: translateY(7px) rotate(45deg);
+  }
+
+  .mobileMenu[open] summary > span:nth-child(2) { opacity: 0; }
+
+  .mobileMenu[open] summary > span:nth-child(3) {
+    transform: translateY(-7px) rotate(-45deg);
+  }
+
+  .mobileMenu summary:focus-visible {
+    outline: 2px solid #ff8b7d;
+    outline-offset: 3px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .mobileMenu summary > span:not(.visuallyHidden) { transition: none; }
 }
 
 .navGroup a {
@@ -38,7 +76,7 @@
   display: block;
   overflow: hidden;
   color: inherit;
-  font-size: 17px;
+  font-size: 15px;
   line-height: 1.2;
   text-decoration: none;
   text-shadow: 0 1px 5px rgb(0 0 0 / 55%);
@@ -69,6 +107,15 @@
   color: #ff685e;
 }
 
+.navGroup a:focus-visible,
+.callToAction:focus-visible,
+.accountIcon:focus-visible,
+.bookingsLink:focus-visible {
+  border-radius: 999px;
+  outline: 2px solid #ff8b7d;
+  outline-offset: 4px;
+}
+
 .navGroup a:hover span,
 .callToAction:hover span {
   transform: translateY(120%);
@@ -94,15 +141,18 @@
 }
 
 .logo {
-  position: absolute;
-  top: 52%;
-  left: 51%;
+  position: static;
+  grid-column: 1;
+  grid-row: 1;
   display: flex;
   width: 204px;
   height: 76px;
   align-items: center;
   justify-content: center;
-  transform: translate(-50%, -50%);
+  transform: none;
+  justify-self: start;
+  width: 148px;
+  height: 56px;
 }
 
 .logo img {
@@ -131,7 +181,8 @@
 .hero {
   position: relative;
   width: 100%;
-  height: 700px;
+  height: min(760px, 88svh);
+  min-height: 590px;
   overflow: hidden;
 }
 
@@ -222,10 +273,28 @@
   color: rgb(255 255 255 / 61%);
 }
 
+.searchForm {
+  position: relative;
+  overflow: hidden; /* clips the progress line to the pill */
+  transition:
+    border-color var(--dur-base, 180ms) ease,
+    box-shadow var(--dur-base, 180ms) ease;
+}
+
+.searchForm:focus-within {
+  border-color: rgb(255 255 255 / 90%);
+  box-shadow:
+    0 12px 32px rgb(0 0 0 / 24%),
+    0 0 0 4px rgb(255 104 94 / 18%);
+}
+
 .searchForm button {
+  display: grid;
+  width: 44px;
   min-height: 44px;
-  flex: 0 0 auto;
-  padding: 0 24px;
+  flex: 0 0 44px;
+  place-items: center;
+  padding: 0;
   border: 0;
   border-radius: 999px;
   background: #f34f57;
@@ -245,6 +314,118 @@
   opacity: 0.65;
 }
 
+/* while searching the button is disabled but should look alive */
+.searchForm button[aria-busy="true"] {
+  cursor: progress;
+  opacity: 1;
+}
+
+.spinner {
+  width: 18px;
+  height: 18px;
+  border: 2px solid rgb(255 255 255 / 35%);
+  border-top-color: #fff;
+  border-radius: 50%;
+  animation: search-spin 700ms linear infinite;
+}
+
+@keyframes search-spin {
+  to { transform: rotate(360deg); }
+}
+
+/* sweeping line along the bottom of the bar while searching */
+.searchProgress {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 35%;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, #ff685e, transparent);
+  animation: search-sweep 1s var(--ease-in-out, ease-in-out) infinite;
+  pointer-events: none;
+}
+
+@keyframes search-sweep {
+  from { transform: translateX(-100%); }
+  to { transform: translateX(300%); }
+}
+
+/* "Searching for ..." panel */
+.searchLoading {
+  display: grid;
+  gap: 2px;
+}
+
+.searchLoadingLabel {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0;
+  padding: 8px 14px 6px;
+  color: rgb(255 255 255 / 72%);
+  font-size: 12px;
+}
+
+.searchLoadingText {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.spinnerSmall {
+  width: 12px;
+  height: 12px;
+  flex: 0 0 auto;
+  border: 2px solid rgb(255 104 94 / 30%);
+  border-top-color: #ff685e;
+  border-radius: 50%;
+  animation: search-spin 700ms linear infinite;
+}
+
+.skeletonRow {
+  display: grid;
+  gap: 8px;
+  padding: 12px 14px;
+}
+
+.skeletonRow span {
+  height: 10px;
+  border-radius: 6px;
+  background: linear-gradient(
+    100deg,
+    rgb(255 255 255 / 6%) 25%,
+    rgb(255 255 255 / 14%) 42%,
+    rgb(255 255 255 / 6%) 62%
+  );
+  background-size: 220% 100%;
+  animation: search-shimmer 1.2s ease infinite;
+}
+
+.skeletonRow span:first-child { width: 62%; height: 12px; }
+.skeletonRow span:last-child { width: 38%; }
+
+@keyframes search-shimmer {
+  to { background-position-x: -220%; }
+}
+
+/* previous results stay visible but dimmed while a new search runs */
+.searchListStale {
+  opacity: 0.45;
+  transition: opacity 160ms ease;
+}
+
+.srOnly {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  margin: -1px;
+  padding: 0;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
 .searchResults {
   position: absolute;
   top: calc(100% + 10px);
@@ -252,44 +433,56 @@
   left: 0;
   z-index: 5;
   overflow: hidden;
+  padding: 6px;
   border: 1px solid rgb(255 255 255 / 20%);
-  border-radius: 14px;
+  border-radius: 18px; /* 12px inner rows + 6px padding = concentric */
   background: rgb(14 15 18 / 96%);
   color: #fff;
   font-family: var(--font-inter), sans-serif;
   box-shadow: 0 18px 44px rgb(0 0 0 / 38%);
   backdrop-filter: blur(16px);
+  transform-origin: top center;
 }
 
-.searchResults > p {
+.searchList {
+  display: grid;
+  gap: 2px;
   margin: 0;
-  padding: 18px 20px;
-  color: rgb(255 255 255 / 76%);
-  font-size: 14px;
+  padding: 0;
+  list-style: none;
 }
 
 .searchResult {
+  position: relative;
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto;
   gap: 4px 16px;
-  padding: 14px 18px;
-  border-bottom: 1px solid rgb(255 255 255 / 12%);
+  padding: 12px 14px;
+  border-radius: 12px;
   color: inherit;
   text-decoration: none;
 }
 
-.searchResult:hover,
-.searchResult:focus-visible {
-  background: rgb(255 255 255 / 7%);
+/* the sliding highlight; layoutId moves it between rows */
+.searchResult .searchActive {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  grid-column: auto;
+  grid-row: auto;
+  border-radius: 12px;
+  background: rgb(255 255 255 / 8%);
+  pointer-events: none;
+}
+
+.searchResult > :not(.searchActive) {
+  position: relative;
+  z-index: 1;
 }
 
 .searchResult:focus-visible {
   outline: 2px solid #ff8b7d;
   outline-offset: -2px;
-}
-
-.searchResult:last-child {
-  border-bottom: 0;
 }
 
 .searchResult strong {
@@ -313,6 +506,74 @@
   align-self: center;
   color: #ff8b7d;
   font-size: 13px;
+  font-variant-numeric: tabular-nums;
+}
+
+/* empty + error states */
+.searchState {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 14px;
+}
+
+.searchState > svg {
+  flex: 0 0 auto;
+  color: #ff8b7d;
+}
+
+.searchState > div {
+  display: grid;
+  min-width: 0;
+  flex: 1;
+  gap: 2px;
+}
+
+.searchState strong {
+  font-size: 14px;
+  font-weight: 400;
+}
+
+.searchState span {
+  color: rgb(255 255 255 / 62%);
+  font-size: 12px;
+}
+
+.retryChip {
+  min-height: 32px;
+  flex: 0 0 auto;
+  padding: 0 14px;
+  border: 1px solid rgb(255 255 255 / 22%);
+  border-radius: 999px;
+  background: rgb(255 255 255 / 8%);
+  color: #fff;
+  cursor: pointer;
+  font: inherit;
+  font-size: 12px;
+  transition:
+    background-color 140ms ease,
+    border-color 140ms ease,
+    scale 160ms var(--ease-out, ease);
+}
+
+.retryChip:hover {
+  border-color: rgb(255 255 255 / 40%);
+  background: rgb(255 255 255 / 14%);
+}
+
+.retryChip:focus-visible {
+  outline: 2px solid #ff8b7d;
+  outline-offset: 3px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .spinner,
+  .spinnerSmall { animation-duration: 2s; }
+  .searchProgress { width: 100%; opacity: 0.6; animation: none; }
+  .skeletonRow span { animation: none; }
+  .searchListStale { transition: none; }
+  .searchForm,
+  .retryChip { transition: none; }
 }
 
 .accountActions,
@@ -325,6 +586,12 @@
 .accountActions,
 .accountSignIn {
   gap: 10px;
+}
+
+.accountActions {
+  grid-column: 3;
+  grid-row: 1;
+  justify-self: end;
 }
 
 .accountIdentity {
@@ -370,14 +637,12 @@
   color: #ff8b7d;
 }
 
-/* Hero image */
 .hero > img {
   object-fit: cover;
   width: 100%;
   height: 100%;
 }
 
-/* Curved dark dissolve with a matching soft blur */
 .hero::before {
   content: "";
   position: absolute;
@@ -416,33 +681,186 @@
   pointer-events: none;
 }
 
-@media (max-width: 480px) {
+@media (max-width: 760px) and (min-width: 481px) {
   .navbar {
-    height: 112px;
-    padding: 8px 12px 0;
-    align-items: flex-start;
+    grid-template-columns: minmax(0, 1fr) auto auto;
+    gap: 12px;
+    height: 78px;
+    padding: 0 16px;
   }
 
   .navGroup {
-    position: absolute;
-    top: 66px;
-    left: 50%;
-    min-height: 38px;
-    gap: 10px;
-    padding: 0 13px;
-    transform: translateX(-50%);
+    display: none;
   }
 
   .navGroup a {
-    font-size: 12px;
+    font-size: 11px;
+  }
+
+  .navGroup {
+    grid-column: 2;
   }
 
   .logo {
-    top: 29px;
-    left: 14px;
+    width: 125px;
+    height: 52px;
+    grid-column: 1;
+  }
+
+  .mobileMenu {
+    position: relative;
+    display: block;
+    grid-column: 3;
+    grid-row: 1;
+    justify-self: end;
+  }
+
+  .mobileMenu summary {
+    display: grid;
+    width: 40px;
+    height: 40px;
+    align-content: center;
+    justify-items: center;
+    gap: 5px;
+    border: 1px solid rgb(255 255 255 / 25%);
+    border-radius: 12px;
+    background: rgb(16 17 19 / 88%);
+    cursor: pointer;
+    list-style: none;
+    backdrop-filter: blur(10px);
+  }
+
+  .mobileMenu summary::-webkit-details-marker { display: none; }
+  .mobileMenu summary > span:not(.visuallyHidden) {
+    width: 17px;
+    height: 2px;
+    border-radius: 2px;
+    background: #fff;
+  }
+
+  .mobileNavGroup {
+    position: absolute;
+    top: 48px;
+    right: 0;
+    display: grid;
+    width: min(240px, calc(100vw - 32px));
+    gap: 4px;
+    padding: 8px;
+    border: 1px solid rgb(255 255 255 / 12%);
+    border-radius: 16px;
+    background: rgb(16 17 19 / 96%);
+    box-shadow: 0 16px 40px rgb(0 0 0 / 35%);
+    backdrop-filter: blur(16px);
+  }
+
+  .mobileNavGroup a {
+    padding: 12px;
+    border-radius: 10px;
+    color: #fff;
+    font: 500 14px var(--font-inter), sans-serif;
+    text-decoration: none;
+  }
+
+  .mobileNavGroup a:hover,
+  .mobileNavGroup a:focus-visible { background: rgb(255 255 255 / 9%); }
+
+  .accountIdentity span,
+  .bookingsLink span,
+  .callToAction {
+    display: none;
+  }
+
+  .accountActions,
+  .accountSignIn {
+    grid-column: 2;
+    gap: 8px;
+  }
+
+  .accountIdentity svg {
+    width: 22px;
+    height: 22px;
+  }
+}
+
+@media (max-width: 480px) {
+  .hero {
+    height: min(620px, 66svh);
+    min-height: 540px;
+  }
+
+  .navbar {
+    height: 101px;
+    grid-template-columns: minmax(0, 1fr) auto auto;
+    grid-template-rows: 56px;
+    gap: 8px;
+    padding: 0 16px;
+    align-items: center;
+  }
+
+  .navGroup { display: none; }
+
+  .mobileMenu {
+    position: relative;
+    display: block;
+    grid-column: 3;
+    grid-row: 1;
+    justify-self: end;
+  }
+
+  .mobileMenu summary {
+    display: grid;
+    width: 40px;
+    height: 40px;
+    align-content: center;
+    justify-items: center;
+    gap: 5px;
+    border: 1px solid rgb(255 255 255 / 25%);
+    border-radius: 12px;
+    background: rgb(16 17 19 / 88%);
+    cursor: pointer;
+    list-style: none;
+    backdrop-filter: blur(10px);
+  }
+
+  .mobileMenu summary::-webkit-details-marker { display: none; }
+  .mobileMenu summary > span:not(.visuallyHidden) {
+    width: 17px;
+    height: 2px;
+    border-radius: 2px;
+    background: #fff;
+  }
+
+  .mobileNavGroup {
+    position: absolute;
+    top: 48px;
+    right: 0;
+    display: grid;
+    width: min(240px, calc(100vw - 32px));
+    gap: 4px;
+    padding: 8px;
+    border: 1px solid rgb(255 255 255 / 12%);
+    border-radius: 16px;
+    background: rgb(16 17 19 / 96%);
+    box-shadow: 0 16px 40px rgb(0 0 0 / 35%);
+    backdrop-filter: blur(16px);
+  }
+
+  .mobileNavGroup a {
+    padding: 12px;
+    border-radius: 10px;
+    color: #fff;
+    font: 500 14px var(--font-inter), sans-serif;
+    text-decoration: none;
+  }
+
+  .mobileNavGroup a:hover,
+  .mobileNavGroup a:focus-visible { background: rgb(255 255 255 / 9%); }
+
+  .logo {
     width: 100px;
-    height: 38px;
-    transform: translateY(-50%);
+    height: 40px;
+    grid-column: 1;
+    grid-row: 1;
   }
 
   .callToAction {
@@ -451,10 +869,18 @@
   }
 
   .accountActions {
-    position: absolute;
-    top: 12px;
-    right: 12px;
+    position: static;
+    grid-column: 2;
+    grid-row: 1;
+    justify-self: end;
   }
+
+  .accountIdentity span,
+  .bookingsLink span,
+  .callToAction { display: none; }
+
+  .accountActions,
+  .accountSignIn { gap: 6px; }
 
   .accountIdentity {
     font-size: 13px;
@@ -471,16 +897,24 @@
   }
 
   .heroContent {
-    top: 29%;
+    top: 36%;
+    left: 16px;
+    width: calc(100% - 32px);
+    text-align: left;
+    transform: none;
   }
 
   .heroContent h1 {
-    font-size: clamp(37px, 10vw, 48px);
+    max-width: 340px;
+    font-size: clamp(38px, 10.5vw, 48px);
+    line-height: 0.98;
   }
 
   .heroContent > p {
-    margin: 14px 0 22px;
-    font-size: 14px;
+    max-width: 310px;
+    margin: 12px 0 17px;
+    font-size: 12px;
+    line-height: 1.45;
   }
 
   .searchForm {
@@ -496,7 +930,8 @@
 
   .searchForm button {
     min-height: 40px;
-    padding: 0 16px;
+    width: 40px;
+    flex-basis: 40px;
   }
 
   .callToAction::after {
@@ -508,6 +943,7 @@
     top: 8px;
   }
 }
+
 
 @keyframes navbar-arrive {
   from {
@@ -532,4 +968,120 @@
   .callToAction::after {
     transition: none;
   }
+}
+
+/* ---------- navigation ---------- */
+
+.accountIdentity {
+  gap: 10px;
+  font-family: var(--font-inter), sans-serif;
+  font-size: 13px;
+  font-weight: 500;
+  text-shadow: none;
+}
+
+.avatar {
+  display: grid;
+  width: 38px;
+  height: 38px;
+  place-items: center;
+  border-radius: 50%;
+  background: #f43f4b;
+  color: #fff;
+  font-family: var(--font-inter), sans-serif;
+  font-size: 15px;
+  font-weight: 600;
+}
+
+.signOutButton {
+  display: grid;
+  width: 40px;
+  height: 40px;
+  place-items: center;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: transparent;
+  color: rgb(255 255 255 / 88%);
+  cursor: pointer;
+  transition: color 160ms ease, background 160ms ease;
+}
+
+.signOutButton:hover {
+  background: rgb(255 255 255 / 8%);
+  color: #fff;
+}
+
+.signOutButton:focus-visible {
+  outline: 2px solid #ff8b7d;
+  outline-offset: 3px;
+}
+
+@media (min-width: 761px) {
+  .accountActions {
+    gap: 18px;
+  }
+
+  /* the ticket icon is only for small screens, where the words are hidden */
+  .bookingsLink svg {
+    display: none;
+  }
+}
+
+/* Keep the primary navigation available while the home page scrolls. */
+.navbar {
+  position: relative;
+  width: 100%;
+  background: transparent;
+}
+
+.hero {
+  margin-top: -88px;
+  padding-top: 88px;
+}
+
+@media (max-width: 760px) and (min-width: 481px) {
+  .hero {
+    margin-top: -78px;
+    padding-top: 78px;
+  }
+
+  .navbar {
+    grid-template-columns: minmax(0, 1fr) auto auto;
+  }
+
+  .navGroup { display: none; }
+
+  .accountActions {
+    grid-column: 2;
+    grid-row: 1;
+  }
+
+  .mobileMenu { grid-column: 3; grid-row: 1; }
+}
+
+@media (max-width: 480px) {
+  .hero {
+    margin-top: -64px;
+    padding-top: 64px;
+  }
+
+  .navbar {
+    height: 64px;
+    grid-template-columns: minmax(0, 1fr) auto auto;
+    grid-template-rows: 56px;
+    gap: 0 8px;
+    padding: 0 16px;
+  }
+
+  .logo { grid-column: 1; grid-row: 1; }
+
+  .mobileMenu { grid-column: 3; grid-row: 1; }
+
+  .accountActions {
+    grid-column: 2;
+    grid-row: 1;
+  }
+
+  .navGroup { display: none; }
 }

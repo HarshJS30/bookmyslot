@@ -1,0 +1,4 @@
+CREATE TYPE "EventCategory" AS ENUM ('MOVIES', 'CONCERTS', 'COMEDY', 'THEATRE', 'SPORTS', 'OTHER');
+
+ALTER TABLE "Event"
+ADD COLUMN "category" "EventCategory" NOT NULL DEFAULT 'OTHER';

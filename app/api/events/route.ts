@@ -42,7 +42,9 @@ export async function GET() {
   const events = await prisma.event.findMany({
     include: {
       venue: true,
-    }
+      ticketCategories: { select: { price: true } },
+    },
+    orderBy: { startsAt: "asc" },
   })
 
     return Response.json(events)

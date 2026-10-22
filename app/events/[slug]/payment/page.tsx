@@ -64,14 +64,19 @@ export default async function PaymentPage({
         <ArrowLeft size={16} aria-hidden="true" /> Back to event
       </Link>
       <header className={styles.header}>
-        <p className={styles.eyebrow}>{event.venue.name} · {event.venue.location}</p>
-        <h1>Demo checkout</h1>
-        <p>{event.name}</p>
+        <p className={styles.eyebrow}>Complete your booking</p>
+        <h1>Review &amp; pay</h1>
       </header>
       <PaymentCheckout
         holdExpiresAt={holdExpiresAt}
         eventId={eventId}
         eventPath={eventHref(event)}
+        eventImageUrl={event.imageUrl}
+        eventName={event.name}
+        eventTime={event.startsAt.toLocaleString(undefined, {
+          weekday: "short", day: "numeric", month: "short", hour: "numeric", minute: "2-digit",
+        })}
+        venueName={`${event.venue.name}, ${event.venue.location}`}
         seats={seats.map((seat) => ({
           id: seat.id,
           seatLabel: seat.seatLabel,
