@@ -35,11 +35,13 @@ export default function SeatPicker({
   canBook,
   eventId,
   eventPath,
+  loginAction,
   seats,
 }: {
   canBook: boolean;
   eventId: string;
   eventPath: string;
+  loginAction: () => Promise<void>;
   seats: SeatData[];
 }) {
   const router = useRouter();
@@ -306,13 +308,24 @@ export default function SeatPicker({
               </button>
             ))}
           </div>
+        ) : canBook ? (
+          <p className={styles.selectionHint}>Select seats from the map.</p>
         ) : (
-          <p className={styles.selectionHint}>{canBook ? "Select seats from the map." : "Sign in to select seats."}</p>
+          <div className={styles.guestBooking}>
+            <p>Sign in to select seats and continue to booking.</p>
+            <form action={loginAction}>
+              <button className={styles.primaryButton} type="submit">
+                Sign in with GitHub
+              </button>
+            </form>
+          </div>
         )}
-        <div className={styles.priceDetails}>
-          <span>Ticket price ({selectedSeats.length})</span>
-          <strong>{money(total)}</strong>
-        </div>
+        {canBook && (
+          <div className={styles.priceDetails}>
+            <span>Ticket price ({selectedSeats.length})</span>
+            <strong>{money(total)}</strong>
+          </div>
+        )}
         {error && <p className={styles.error} role="alert">{error}</p>}
         {canBook && (
           <button

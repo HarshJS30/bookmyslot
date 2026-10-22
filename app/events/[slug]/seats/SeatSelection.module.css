@@ -131,8 +131,9 @@
 /* ---------- layout ---------- */
 
 .bookingLayout {
+  width: 100%;
   display: grid;
-  grid-template-columns: minmax(0, 1fr) 300px;
+  grid-template-columns: minmax(0, 1fr) minmax(260px, 300px);
   align-items: start;
   gap: 18px;
 }
@@ -144,6 +145,10 @@
   border: 1px solid var(--card-line);
   border-radius: 28px;
   background: var(--card);
+}
+
+.summary {
+  min-width: 0;
 }
 
 .seatPanel {
@@ -518,6 +523,23 @@
   font-size: 12px;
 }
 
+.guestBooking {
+  display: grid;
+  gap: 12px;
+  padding: 16px 0;
+  color: rgb(235 237 238 / 66%);
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.guestBooking p {
+  margin: 0;
+}
+
+.guestBooking .primaryButton {
+  width: 100%;
+}
+
 .selectedList {
   display: flex;
   flex-wrap: wrap;
@@ -659,6 +681,10 @@
     display: none;
   }
 
+  .summary .guestBooking .primaryButton {
+    display: inline-flex;
+  }
+
   .mobileBar {
     position: fixed;
     inset: auto 0 0;
@@ -696,6 +722,16 @@
 
   .bookingLayout {
     grid-template-columns: 1fr;
+  }
+
+  .summary {
+    position: static;
+  }
+}
+
+@media (max-width: 1200px) {
+  .bookingLayout {
+    grid-template-columns: minmax(0, 1fr);
   }
 
   .summary {

@@ -1,7 +1,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { ArrowLeft, ArrowRight } from "@phosphor-icons/react/dist/ssr";
+import { ArrowLeft } from "@phosphor-icons/react/dist/ssr";
 import { auth, signIn } from "@/auth";
 import { eventHref } from "@/lib/event-url";
 import prisma from "@/lib/prisma";
@@ -93,18 +93,9 @@ export default async function SeatSelectionPage({
         canBook={Boolean(session)}
         eventId={event.id}
         eventPath={eventHref(event)}
+        loginAction={loginToChooseSeats}
         seats={seats}
       />
-      {!session && (
-        <section className={styles.signInPrompt}>
-          <p>Sign in to select seats and continue to booking.</p>
-          <form action={loginToChooseSeats}>
-            <button className={styles.primaryButton} type="submit">
-              Sign in with GitHub <ArrowRight size={16} aria-hidden="true" />
-            </button>
-          </form>
-        </section>
-      )}
     </main>
   );
 }
