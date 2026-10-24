@@ -56,6 +56,10 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      - name: Install Linux native binaries
+        run: |
+          npm install --no-save lightningcss-linux-x64-gnu@$(node -p "JSON.parse(require('fs').readFileSync('node_modules/lightningcss/package.json')).version") @tailwindcss/oxide-linux-x64-gnu@$(node -p "JSON.parse(require('fs').readFileSync('node_modules/@tailwindcss/oxide/package.json')).version")
+
       - name: Apply migrations
         run: npx prisma migrate deploy
 
