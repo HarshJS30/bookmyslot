@@ -3,6 +3,11 @@
 A BookMyShow-style seat booking system built to answer one question: **what happens when 1,000 people try to grab the same seat at the same time?**
 
 Live demo: https://bookmyslot.helloharsh.me
+Demo video: https://youtu.be/SpmFF-cpmIQ
+
+[![Watch the demo](https://img.youtube.com/vi/SpmFF-cpmIQ/maxresdefault.jpg)](https://youtu.be/SpmFF-cpmIQ)
+
+Benchmarks, methods and the experiments that failed: [BENCHMARKS.md](BENCHMARKS.md)
 
 **Result: 1,000 users fight for one seat, 20 rounds, exactly one winner every round, 0 double bookings. On one laptop with k6 sharing the CPU: 112 to 182 req/s.**
 
@@ -78,7 +83,7 @@ The tests are written to try to break the system, not just to pass.
 | Average latency | 4 to 8 s |
 | p95 latency | about 10 to 18 s |
 
-Latency here is mostly queueing: 1,000 virtual users with no pause hammering 4 Node processes. It is a stress test, not a model of real users.
+Latency here is mostly queueing: 1,000 virtual users with no pause hammering 4 Node processes. With no think time, average latency is roughly 1,000 divided by req/s (161 req/s works out to about 6 s, and the measured average in that run was 5.7 s), so it tells you nothing beyond throughput. It is a stress test, not a model of real users.
 
 ### 2. Paced mixed traffic (closer to real use)
 
