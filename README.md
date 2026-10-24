@@ -3,6 +3,9 @@
 A BookMyShow-style seat booking system built to answer one question: **what happens when 1,000 people try to grab the same seat at the same time?**
 
 Live demo: https://bookmyslot.helloharsh.me
+
+[![CI](https://github.com/HarshJS30/bookmyslot/actions/workflows/ci.yml/badge.svg)](https://github.com/HarshJS30/bookmyslot/actions/workflows/ci.yml)
+
 Demo video: https://youtu.be/SpmFF-cpmIQ
 
 [![Watch the demo](https://img.youtube.com/vi/SpmFF-cpmIQ/maxresdefault.jpg)](https://youtu.be/SpmFF-cpmIQ)
@@ -134,7 +137,7 @@ Conclusion: the evidence points to CPU saturation in the Node.js request path in
 - An expired database hold can stay blocked by a live Redis lock until the lock's TTL runs out. This only delays a booking and never causes a double booking.
 - Lock release is not atomic yet (needs a Lua compare-and-delete).
 - Payment is simulated. A real provider would need a pending payment state, webhook confirmation, and seats kept held until the provider confirms, so a declined payment never turns into a confirmed booking.
-- Tests are not in CI yet. The only workflow is a keep-alive cron.
+- The tests run in CI now, but the k6 load tests don’t
 - No rate limiting and no cap on how many seats one user can hold in total.
 - The organizer routes (events, ticket categories, seats) do not use zod validation the way holds and confirm do.
 - If Redis is unreachable, I expect holds to fail with an error instead of double booking. I have not tested that, and there is no database-only fallback.
