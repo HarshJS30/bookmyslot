@@ -13,6 +13,7 @@
 // It uses seats 100 and up from loadtest/data.json and the first two users, so it never
 // touches the seats the one-seat fight uses (0 to 19). Reseed before running it again.
 
+import "./guard-local";
 import prisma from "@/lib/prisma"
 import { randomUUID } from "node:crypto"
 import { readFileSync } from "node:fs"

@@ -1,6 +1,7 @@
 import prisma from "@/lib/prisma"
 import redis from "@/lib/redis"
 import { randomUUID } from "node:crypto"
+import "./guard-local";
 
 const BASE = process.env.BASE_URL ?? "http://localhost:3000"
 const RUN = randomUUID().slice(0, 8) // tags every test row so cleanup finds only ours

@@ -1,3 +1,4 @@
+import "./guard-local";
 import prisma from "@/lib/prisma"
 import redis from "@/lib/redis"
 import { randomUUID } from "node:crypto"

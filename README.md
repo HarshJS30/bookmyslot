@@ -4,6 +4,7 @@ A BookMyShow-style seat booking system built to answer one question: **what happ
 
 Live demo: https://bookmyslot.helloharsh.me
 
+**Result: 1,000 users fight for one seat, 20 rounds, exactly one winner every round, 0 double bookings. On one laptop with k6 sharing the CPU: 112 to 182 req/s.**
 
 ## Result in one paragraph
 
@@ -122,8 +123,8 @@ Conclusion: the evidence points to CPU saturation in the Node.js request path in
 
 ## Known limitations and next steps
 
-- **JWT sessions** would remove the per-request database lookup and are the biggest likely gain. Not done, not tested. It changes sign-out and revocation behavior, so it needs care.
-- A Redis session cache is a cheaper middle option, still one Redis call per request.
+- **JWT sessions** would remove the per-request database lookup, but the gain is unknown. `/api/whoami` (login check only) got 208 req/s while `/api/health` (no work) swung between 213 and 436 on identical settings, too noisy to tell. Not done, not tested. It changes sign-out and revocation behavior, so it needs care.
+- A Redis session cache is a cheaper middle option than a database lookup, but it is still one Redis call per request.
 - The load tests use a fresh idempotency key per confirm, so simultaneous retries are covered by `test-confirm.ts` and not by the load tests.
 - An expired database hold can stay blocked by a live Redis lock until the lock's TTL runs out. This only delays a booking and never causes a double booking.
 - Lock release is not atomic yet (needs a Lua compare-and-delete).
