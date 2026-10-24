@@ -8,7 +8,11 @@
     "start": "next start",
     "lint": "eslint",
     "postinstall": "prisma generate",
-    "seed:homepage": "tsx --env-file=.env scripts/seed-homepage-events.ts"
+    "seed:homepage": "tsx --env-file=.env scripts/seed-homepage-events.ts",
+    "test:p0": "tsx scripts/test-p0.ts",
+    "test:break": "tsx scripts/test-break.ts",
+    "test:confirm": "tsx scripts/test-confirm.ts",
+    "seed:load": "tsx scripts/load-seed.ts"
   },
   "dependencies": {
     "@auth/prisma-adapter": "^2.11.3",
