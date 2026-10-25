@@ -49,12 +49,25 @@ export async function POST(
     }
 
     try {
-        // 1. Acquire Redis locks for all requested seats
-        const lockResults = await Promise.all(
-            seatIds.map((seatId) =>
-                acquireLock(seatId,session.user.id)
-            )
-        );
+        // 1. Acquire Redis locks for all requested seats.
+        // If Redis is down, carry on with the database alone. The database
+        // update below is the real guarantee, so this is still safe.
+        let redisAvailable = true;
+        let lockResults: boolean[] = [];
+
+        try {
+            lockResults = await Promise.all(
+                seatIds.map((seatId) =>
+                    acquireLock(seatId, session.user.id)
+                )
+            );
+        } catch (redisError) {
+            console.error(
+                "Redis unavailable, falling back to database-only holds:",
+                redisError
+            );
+            redisAvailable = false;
+        }
 
         // 2. Record successfully acquired locks
         seatIds.forEach((seatId, index) => {
@@ -63,11 +76,11 @@ export async function POST(
             }
         });
 
-        // 3. If any lock failed, release the locks we acquired
-        if (acquiredSeatIds.length !== seatIds.length) {
+        // 3. If Redis answered and any lock failed, release the locks we acquired
+        if (redisAvailable && acquiredSeatIds.length !== seatIds.length) {
             await Promise.all(
                 acquiredSeatIds.map((seatId) => {
-                    return releaseLock(seatId,session.user.id)
+                    return releaseLock(seatId, session.user.id)
                 })
             );
 
@@ -146,7 +159,7 @@ export async function POST(
         try {
             await Promise.all(
                 acquiredSeatIds.map((seatId) => {
-                    return releaseLock(seatId,session.user.id)
+                    return releaseLock(seatId, session.user.id)
                 })
             );
         } catch (cleanupError) {
@@ -233,7 +246,7 @@ export async function DELETE(
     try {
         await Promise.all(
             releasedSeatIds.map((seatId) => {
-                return releaseLock(seatId,session.user.id)
+                return releaseLock(seatId, session.user.id)
             })
         );
     } catch (err) {
