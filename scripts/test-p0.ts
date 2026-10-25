@@ -136,6 +136,8 @@ async function main() {
     const seatR2 = await makeSeat("T9") // scenario 4: B's seat
     const seatE = await makeSeat("T10") // scenario 5: expired hold
     const seatS = await makeSeat("T11") // scenario 6: A re-holds their own seat
+    const seatP = await makeSeat("T12") // scenario 7: hold that gets expired
+    const seatQ = await makeSeat("T13") // scenario 7: hold that stays live
 
     // ---------- Scenario 1: ownership ----------
     console.log("\nScenario 1: B cannot confirm a seat A holds, even if Redis wrongly says B owns it")
@@ -352,6 +354,49 @@ async function main() {
         "T11 is still HELD by A after B's attempt",
         sg.status === "HELD" && sg.heldByUserId === userA.id && (await lockOf(seatS.id)) === userA.id,
         `status=${sg.status} heldBy=${sg.heldByUserId}`
+    )
+        // ---------- Scenario 7: reading seats is pure ----------
+    console.log("\nScenario 7: GET seats shows an expired hold as AVAILABLE without changing the database")
+
+    const p1 = await hold(tokenA, event.id, [seatP.id])
+    const q1 = await hold(tokenA, event.id, [seatQ.id])
+    check("A holds T12 and T13 (expect 200 / 200)", p1.status === 200 && q1.status === 200, `got ${p1.status}/${q1.status}`)
+
+    // Expire only T12, in the database and in Redis, like Redis does by itself after 5 minutes.
+    const expiredAt = new Date(Date.now() - 60_000)
+    await prisma.seat.update({ where: { id: seatP.id }, data: { holdExpiresAt: expiredAt } })
+    await redis.del(`seat:lock:${seatP.id}`)
+
+    const listRes = await fetch(BASE + `/api/events/${event.id}/seats`)
+    const list = (await listRes.json().catch(() => [])) as {
+        id: string
+        status: string
+        heldByUserId: string | null
+        category?: unknown
+    }[]
+    const shownP = list.find((s) => s.id === seatP.id)
+    const shownQ = list.find((s) => s.id === seatQ.id)
+
+    check("GET seats answers 200", listRes.status === 200, `got ${listRes.status}`)
+    check(
+        "expired seat T12 is shown as AVAILABLE with no holder",
+        shownP?.status === "AVAILABLE" && shownP.heldByUserId === null,
+        JSON.stringify(shownP)
+    )
+    check(
+        "live hold T13 is still shown as HELD by A",
+        shownQ?.status === "HELD" && shownQ.heldByUserId === userA.id,
+        JSON.stringify(shownQ)
+    )
+    check("the response still includes the category", shownP?.category !== undefined, JSON.stringify(shownP))
+
+    const rowP = await getSeat(seatP.id)
+    check(
+        "the database row for T12 was NOT changed by the read",
+        rowP.status === "HELD" &&
+            rowP.heldByUserId === userA.id &&
+            rowP.holdExpiresAt?.getTime() === expiredAt.getTime(),
+        `status=${rowP.status} heldBy=${rowP.heldByUserId} expires=${rowP.holdExpiresAt}`
     )
 
     console.log(failures === 0 ? "\nAll checks passed" : `\n${failures} check(s) FAILED`)

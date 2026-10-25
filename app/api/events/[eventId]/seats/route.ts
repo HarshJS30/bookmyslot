@@ -1,5 +1,4 @@
 import { auth } from "@/auth"
-import redis from "@/lib/redis"
 import prisma from "@/lib/prisma"
 
 export async function POST(
@@ -63,40 +62,7 @@ export async function GET(
 ) {
     const { eventId } = await params
 
-    const now = new Date()
-
-    const staleSeats = await prisma.$queryRaw<{ id: string }[]>`
-        UPDATE "Seat"
-        SET
-            status = 'AVAILABLE',
-            "heldByUserId" = NULL,
-            "holdExpiresAt" = NULL,
-            "reservedAt" = NULL
-        WHERE "eventId" = ${eventId}
-          AND status = 'HELD'
-          AND "holdExpiresAt" < ${now}
-        RETURNING id
-    `
-
-    try {
-        await Promise.all(
-            staleSeats.map((seat) =>
-                redis.publish(
-                    "realtime",
-                    JSON.stringify({
-                        eventId,
-                        seatId: seat.id,
-                        status: "AVAILABLE",
-                    })
-                )
-            )
-        )
-    } catch (err) {
-        console.error(
-            "Failed to publish expiry updates:",
-            err
-        )
-    }
+    const now = new Date()    
 
     const seats = await prisma.seat.findMany({
         where: {
@@ -107,5 +73,21 @@ export async function GET(
         },
     })
 
-    return Response.json(seats)
+    const result = seats.map((seat)=>{
+        const expired = 
+            seat.status === "HELD" &&
+            seat.holdExpiresAt  !== null &&
+            seat.holdExpiresAt < now
+        if(!expired) return seat
+
+        return {
+            ...seat,
+            status:"AVAILABLE",
+            heldByUserId: null,
+            holdExpiresAt: null,
+            reservedAt: null
+        }
+    })
+
+    return Response.json(result)
 }
