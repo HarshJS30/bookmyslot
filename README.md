@@ -135,9 +135,8 @@ Conclusion: the evidence points to CPU saturation in the Node.js request path in
 - A Redis session cache is a cheaper middle option than a database lookup, but it is still one Redis call per request.
 - The load tests use a fresh idempotency key per confirm, so simultaneous retries are covered by `test-confirm.ts` and not by the load tests.
 - An expired database hold can stay blocked by a live Redis lock until the lock's TTL runs out. This only delays a booking and never causes a double booking.
-- Lock release is not atomic yet (needs a Lua compare-and-delete).
 - Payment is simulated. A real provider would need a pending payment state, webhook confirmation, and seats kept held until the provider confirms, so a declined payment never turns into a confirmed booking.
-- The tests run in CI now, but the k6 load tests don’t
+- The tests run in CI now, but the k6 load tests don’t.
 - No rate limiting and no cap on how many seats one user can hold in total.
 - The organizer routes (events, ticket categories, seats) do not use zod validation the way holds and confirm do.
 - If Redis is unreachable, I expect holds to fail with an error instead of double booking. I have not tested that, and there is no database-only fallback.

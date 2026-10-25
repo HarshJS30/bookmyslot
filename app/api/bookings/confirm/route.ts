@@ -4,6 +4,7 @@ import redis from '@/lib/redis'
 import prisma from '@/lib/prisma'
 import { seatIdsSchema } from '@/lib/validation'
 import { SeatsUnavailableError } from '@/lib/errors'
+import { releaseLock } from '@/lib/redis-locks'
 
 // If this user already used this idempotency key, answer from the saved booking.
 //   same key, same seats      -> a safe retry, return the booking (200)
@@ -183,7 +184,7 @@ export async function POST(request: Request) {
         try {
             await Promise.all(
                 seatIds.map((seatId) =>
-                    redis.del(`seat:lock:${seatId}`)
+                    releaseLock(seatId,userId)
                 )
             )
         } catch (err) {

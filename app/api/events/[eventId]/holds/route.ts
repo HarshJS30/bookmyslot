@@ -4,6 +4,7 @@ import redis from "@/lib/redis";
 import { Prisma } from "../../../../generated/prisma/client";
 import { seatIdsSchema } from "@/lib/validation";
 import { SeatsUnavailableError } from "@/lib/errors";
+import { releaseLock } from "@/lib/redis-locks";
 
 export async function POST(
     request: Request,
@@ -71,13 +72,8 @@ export async function POST(
         // 3. If any lock failed, release the locks we acquired
         if (acquiredSeatIds.length !== seatIds.length) {
             await Promise.all(
-                acquiredSeatIds.map(async (seatId) => {
-                    const key = `seat:lock:${seatId}`;
-                    const owner = await redis.get(key);
-
-                    if (owner === session.user.id) {
-                        await redis.del(key);
-                    }
+                acquiredSeatIds.map((seatId) => {
+                    return releaseLock(seatId,session.user.id)
                 })
             );
 
@@ -151,13 +147,8 @@ export async function POST(
         // 6. Attempt Redis cleanup without masking the original error
         try {
             await Promise.all(
-                acquiredSeatIds.map(async (seatId) => {
-                    const key = `seat:lock:${seatId}`;
-                    const owner = await redis.get(key);
-
-                    if (owner === session.user.id) {
-                        await redis.del(key);
-                    }
+                acquiredSeatIds.map((seatId) => {
+                    return releaseLock(seatId,session.user.id)
                 })
             );
         } catch (cleanupError) {
@@ -243,13 +234,8 @@ export async function DELETE(
     // Remove Redis locks
     try {
         await Promise.all(
-            releasedSeatIds.map(async (seatId) => {
-                const key = `seat:lock:${seatId}`;
-                const owner = await redis.get(key);
-
-                if (owner === session.user.id) {
-                    await redis.del(key);
-                }
+            releasedSeatIds.map((seatId) => {
+                return releaseLock(seatId,session.user.id)
             })
         );
     } catch (err) {
