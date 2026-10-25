@@ -135,6 +135,7 @@ async function main() {
     const seatR1 = await makeSeat("T8") // scenario 4: A's seat
     const seatR2 = await makeSeat("T9") // scenario 4: B's seat
     const seatE = await makeSeat("T10") // scenario 5: expired hold
+    const seatS = await makeSeat("T11") // scenario 6: A re-holds their own seat
 
     // ---------- Scenario 1: ownership ----------
     console.log("\nScenario 1: B cannot confirm a seat A holds, even if Redis wrongly says B owns it")
@@ -319,6 +320,38 @@ async function main() {
     check(
         "A has no booking rows",
         (await prisma.booking.count({ where: { userId: userA.id } })) === 0
+    )
+
+        // ---------- Scenario 6: holding your own seat again works, someone else's still fails ----------
+    console.log("\nScenario 6: A re-holds their own seat (refresh), B still cannot take it")
+
+    const f1 = await hold(tokenA, event.id, [seatS.id])
+    check("A holds seat T11 (expect 200)", f1.status === 200, `got ${f1.status}`)
+    const firstExpiry = (await getSeat(seatS.id)).holdExpiresAt
+
+    const f2 = await hold(tokenA, event.id, [seatS.id])
+    check("A holds the same seat again (expect 200)", f2.status === 200, `got ${f2.status}`)
+
+    const sf = await getSeat(seatS.id)
+    check(
+        "T11 is still HELD by A with a later expiry",
+        sf.status === "HELD" &&
+            sf.heldByUserId === userA.id &&
+            sf.holdExpiresAt !== null &&
+            firstExpiry !== null &&
+            sf.holdExpiresAt > firstExpiry,
+        `status=${sf.status} heldBy=${sf.heldByUserId} first=${firstExpiry} now=${sf.holdExpiresAt}`
+    )
+    check("A's Redis lock on T11 is still A's", (await lockOf(seatS.id)) === userA.id)
+
+    const f3 = await hold(tokenB, event.id, [seatS.id])
+    check("B's hold on A's seat is rejected (expect 409)", f3.status === 409, `got ${f3.status}`)
+
+    const sg = await getSeat(seatS.id)
+    check(
+        "T11 is still HELD by A after B's attempt",
+        sg.status === "HELD" && sg.heldByUserId === userA.id && (await lockOf(seatS.id)) === userA.id,
+        `status=${sg.status} heldBy=${sg.heldByUserId}`
     )
 
     console.log(failures === 0 ? "\nAll checks passed" : `\n${failures} check(s) FAILED`)

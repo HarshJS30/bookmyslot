@@ -4,7 +4,7 @@ import redis from "@/lib/redis";
 import { Prisma } from "../../../../generated/prisma/client";
 import { seatIdsSchema } from "@/lib/validation";
 import { SeatsUnavailableError } from "@/lib/errors";
-import { releaseLock } from "@/lib/redis-locks";
+import { acquireLock, releaseLock } from "@/lib/redis-locks";
 
 export async function POST(
     request: Request,
@@ -52,19 +52,13 @@ export async function POST(
         // 1. Acquire Redis locks for all requested seats
         const lockResults = await Promise.all(
             seatIds.map((seatId) =>
-                redis.set(
-                    `seat:lock:${seatId}`,
-                    session.user.id,
-                    "EX",
-                    300,
-                    "NX"
-                )
+                acquireLock(seatId,session.user.id)
             )
         );
 
         // 2. Record successfully acquired locks
         seatIds.forEach((seatId, index) => {
-            if (lockResults[index] === "OK") {
+            if (lockResults[index] === true) {
                 acquiredSeatIds.push(seatId);
             }
         });
@@ -98,6 +92,10 @@ export async function POST(
                                     lt: new Date(),
                                 },
                             },
+                            {
+                                status: "HELD",
+                                heldByUserId: session.user.id
+                            }
                         ],
                     },
                     data: {
