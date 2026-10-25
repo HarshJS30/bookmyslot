@@ -44,7 +44,7 @@ Across 20 rounds of a 1,000-user, single-seat contention test, exactly one user 
 Two layers, and the database is the one that decides.
 
 1. **Redis lock (fast rejection).** `SET seat-lock NX EX` lets only one request in. Everyone else gets 409 immediately without touching Postgres.
-2. **Conditional database update (the real guarantee).** Holds and confirms are `updateMany` calls with the status and holder in the `WHERE` clause, and the code checks the affected row count. If the count is wrong, the whole transaction throws and rolls back. Even if a Redis lock were wrong (my tests forge one), two users still cannot both own a seat. What happens when Redis is fully down is not tested yet, see the known limitations.
+2. **Conditional database update (the real guarantee).** Holds and confirms are `updateMany` calls with the status and holder in the `WHERE` clause, and the code checks the affected row count. If the count is wrong, the whole transaction throws and rolls back. Even if a Redis lock were wrong (my tests forge one), two users still cannot both own a seat. With Redis fully down, holds still go through on the database alone and a fight still has exactly one winner (`scripts/test-redis-down.ts`).
 
 Other decisions worth knowing:
 
@@ -65,6 +65,7 @@ The tests are written to try to break the system, not just to pass.
 - `scripts/test-break.ts`: abuse and edge-case scenarios, including the event-start checks.
 - `scripts/test-confirm.ts`: idempotency. Ten simultaneous confirms with the same key all return the same single booking (one booking row, one payment). Reusing a key with different seats is rejected with 422, including when both requests arrive at the same instant. Seat conflicts and bad requests are covered, and every scenario checks the database, not only the HTTP answers.
 - k6 one-seat fight and paced mixed-traffic tests, described below.
+- `scripts/test-redis-down.ts`: stops the redis container while running and check if holds still succeed through the database alone and the other user gets 409. Fight with 10 users with redis down and still one winner , locks work again after redis is up no app restart needed
 
 ## Load testing
 
@@ -136,10 +137,10 @@ Conclusion: the evidence points to CPU saturation in the Node.js request path in
 - The load tests use a fresh idempotency key per confirm, so simultaneous retries are covered by `test-confirm.ts` and not by the load tests.
 - An expired database hold can stay blocked by a live Redis lock until the lock's TTL runs out. This only delays a booking and never causes a double booking.
 - Payment is simulated. A real provider would need a pending payment state, webhook confirmation, and seats kept held until the provider confirms, so a declined payment never turns into a confirmed booking.
-- The tests run in CI now, but the k6 load tests don’t.
+- The tests run in CI now, but the k6 load tests and the Redis-down test don’t (the Redis-down test stops a Docker container).
 - No rate limiting and no cap on how many seats one user can hold in total.
 - The organizer routes (events, ticket categories, seats) do not use zod validation the way holds and confirm do.
-- If Redis is unreachable, I expect holds to fail with an error instead of double booking. I have not tested that, and there is no database-only fallback.
+- With Redis down, holds use the database alone, so the fast rejection layer is off and every contender reaches Postgres. Correctness holds (tested), but I have not measured how much slower that is under load.
 - Benchmarks should be rerun with k6 on a separate machine to remove the self-competition.
 
 ## Run it locally
@@ -169,6 +170,9 @@ npx tsx scripts/test-break.ts
 $env:USERS="200"; $env:SEATS="5000"
 npx tsx scripts/load-seed.ts
 npx tsx scripts/test-confirm.ts
+
+# 7. Redis-down test (stops the redis container, then starts it again)
+npm run test:redis-down
 ```
 
 `npm run seed:homepage` creates or refreshes the nine event listings shown on the homepage, including venues, ticket prices and available seats. Check that `DATABASE_URL` points to the intended database before running it.
