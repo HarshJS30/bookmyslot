@@ -5,6 +5,7 @@ import { Prisma } from "../../../../generated/prisma/client";
 import { seatIdsSchema } from "@/lib/validation";
 import { SeatsUnavailableError } from "@/lib/errors";
 import { acquireLock, releaseLock } from "@/lib/redis-locks";
+import { isRateLimited } from "@/lib/rate-limit";
 
 export async function POST(
     request: Request,
@@ -14,6 +15,14 @@ export async function POST(
 
     if (!session) {
         return new Response("Unauthorized", { status: 401 });
+    }
+
+    const ratelimit = await isRateLimited(session.user.id)
+    if(ratelimit){
+        return new Response("Too many requests",{
+            status: 429,
+            headers:{"Retry-after":"60"}
+        })
     }
 
     const { eventId } = await params;

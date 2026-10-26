@@ -77,7 +77,6 @@ export async function GET(
     // holds a seat, and an expired hold is shown as AVAILABLE (the cron sweep
     // does the real cleanup in the database).
     const result = seats.map((seat) => {
-        // eslint-disable-next-line @typescript-eslint/no-unused-vars
         const { heldByUserId, ...safeSeat } = seat
 
         const expired =

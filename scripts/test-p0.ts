@@ -83,6 +83,9 @@ async function cleanup() {
     if (seatIds.length > 0) {
         await redis.del(...seatIds.map((id) => `seat:lock:${id}`))
     }
+    if (userIds.length > 0) {
+        await redis.del(...userIds.map((id) => `ratelimit:hold:${id}`))
+    }
     await prisma.payment.deleteMany({ where: { booking: { userId: { in: userIds } } } })
     await prisma.bookingSeat.deleteMany({
         where: { OR: [{ booking: { userId: { in: userIds } } }, { seatId: { in: seatIds } }] },
@@ -138,6 +141,8 @@ async function main() {
     const seatS = await makeSeat("T11") // scenario 6: A re-holds their own seat
     const seatP = await makeSeat("T12") // scenario 7: hold that gets expired
     const seatQ = await makeSeat("T13") // scenario 7: hold that stays live
+    const seatL = await makeSeat("T14") // scenario 8: the rate-limited user's seat
+    const seatM = await makeSeat("T15") // scenario 8: B's seat while the other user is limited
 
     // ---------- Scenario 1: ownership ----------
     console.log("\nScenario 1: B cannot confirm a seat A holds, even if Redis wrongly says B owns it")
@@ -401,6 +406,32 @@ async function main() {
             rowP.holdExpiresAt?.getTime() === expiredAt.getTime(),
         `status=${rowP.status} heldBy=${rowP.heldByUserId} expires=${rowP.holdExpiresAt}`
     )
+
+        // ---------- Scenario 8: hold requests are rate limited per user ----------
+    console.log("\nScenario 8: more than 30 hold requests in a minute from one user get 429")
+
+    const userC = await prisma.user.create({
+        data: { name: "TEST C", email: `${RUN}-c@test.local` },
+    })
+    const tokenC = randomUUID()
+    await prisma.session.create({ data: { sessionToken: tokenC, userId: userC.id, expires: tomorrow } })
+
+    const codes: number[] = []
+    let retryAfter: string | null = null
+    for (let i = 0; i < 35; i++) {
+        const res = await hold(tokenC, event.id, [seatL.id])
+        codes.push(res.status)
+        if (res.status === 429 && retryAfter === null) retryAfter = res.headers.get("retry-after")
+    }
+    check("first 30 requests are allowed", codes.slice(0, 30).every((c) => c === 200), codes.slice(0, 30).join(","))
+    check("requests 31 to 35 get 429", codes.slice(30).every((c) => c === 429), codes.slice(30).join(","))
+    check("the 429 tells the client to wait 60 s (Retry-After)", retryAfter === "60", `got ${retryAfter}`)
+
+    const rel = await release(tokenC, event.id, [seatL.id])
+    check("release is not rate limited (expect 200)", rel.status === 200, `got ${rel.status}`)
+
+    const other = await hold(tokenB, event.id, [seatM.id])
+    check("a different user is not affected (expect 200)", other.status === 200, `got ${other.status}`)
 
     console.log(failures === 0 ? "\nAll checks passed" : `\n${failures} check(s) FAILED`)
     process.exitCode = failures === 0 ? 0 : 1

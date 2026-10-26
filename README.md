@@ -55,6 +55,9 @@ Other decisions worth knowing:
 - **Realtime never blocks bookings.** Publishing to Redis happens after the database write succeeds, in its own try/catch.
 - **Input is validated with zod** on holds and confirm, and the event-start check blocks holding, confirming or cancelling after the event has started.
 - **Overload returns 503 with `Retry-After`** instead of a generic 500 when Prisma cannot start a transaction in time.
+- **Public seat holders are private** the public seat never reveals who holds a seat, only the status of the seat
+- **Hold requests are limited**, they are limited to 30 per minute per user, extra ones gets 429 with `Retry-After` and if Redis is down the limiter lets requests through instead of failing.  
+
 
 ## Proof it works
 
@@ -138,7 +141,7 @@ Conclusion: the evidence points to CPU saturation in the Node.js request path in
 - An expired database hold can stay blocked by a live Redis lock until the lock's TTL runs out. This only delays a booking and never causes a double booking.
 - Payment is simulated. A real provider would need a pending payment state, webhook confirmation, and seats kept held until the provider confirms, so a declined payment never turns into a confirmed booking.
 - The tests run in CI now, but the k6 load tests and the Redis-down test don’t (the Redis-down test stops a Docker container).
-- No rate limiting and no cap on how many seats one user can hold in total.
+- Only the hold route is rate limited and there is no cap on how many seats one user can hold in total across several requests.
 - The organizer routes (events, ticket categories, seats) do not use zod validation the way holds and confirm do.
 - With Redis down, holds use the database alone, so the fast rejection layer is off and every contender reaches Postgres. Correctness holds (tested), but I have not measured how much slower that is under load.
 - Benchmarks should be rerun with k6 on a separate machine to remove the self-competition.
