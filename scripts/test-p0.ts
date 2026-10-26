@@ -371,7 +371,6 @@ async function main() {
     const list = (await listRes.json().catch(() => [])) as {
         id: string
         status: string
-        heldByUserId: string | null
         category?: unknown
     }[]
     const shownP = list.find((s) => s.id === seatP.id)
@@ -379,17 +378,21 @@ async function main() {
 
     check("GET seats answers 200", listRes.status === 200, `got ${listRes.status}`)
     check(
-        "expired seat T12 is shown as AVAILABLE with no holder",
-        shownP?.status === "AVAILABLE" && shownP.heldByUserId === null,
+        "expired seat T12 is shown as AVAILABLE",
+        shownP?.status === "AVAILABLE",
         JSON.stringify(shownP)
     )
     check(
-        "live hold T13 is still shown as HELD by A",
-        shownQ?.status === "HELD" && shownQ.heldByUserId === userA.id,
+        "live hold T13 is still shown as HELD",
+        shownQ?.status === "HELD",
         JSON.stringify(shownQ)
     )
+    check(
+        "no seat in the response exposes who holds it",
+        list.length > 0 && list.every((s) => !("heldByUserId" in s)),
+        `first seat: ${JSON.stringify(list[0])}`
+    )
     check("the response still includes the category", shownP?.category !== undefined, JSON.stringify(shownP))
-
     const rowP = await getSeat(seatP.id)
     check(
         "the database row for T12 was NOT changed by the read",

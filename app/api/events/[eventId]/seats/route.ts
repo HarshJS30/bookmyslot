@@ -62,7 +62,7 @@ export async function GET(
 ) {
     const { eventId } = await params
 
-    const now = new Date()    
+    const now = new Date()
 
     const seats = await prisma.seat.findMany({
         where: {
@@ -73,20 +73,28 @@ export async function GET(
         },
     })
 
-    const result = seats.map((seat)=>{
-        const expired = 
-            seat.status === "HELD" &&
-            seat.holdExpiresAt  !== null &&
-            seat.holdExpiresAt < now
-        if(!expired) return seat
+    // A pure read: nothing is written here. The response never includes who
+    // holds a seat, and an expired hold is shown as AVAILABLE (the cron sweep
+    // does the real cleanup in the database).
+    const result = seats.map((seat) => {
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
+        const { heldByUserId, ...safeSeat } = seat
 
-        return {
-            ...seat,
-            status:"AVAILABLE",
-            heldByUserId: null,
-            holdExpiresAt: null,
-            reservedAt: null
+        const expired =
+            seat.status === "HELD" &&
+            seat.holdExpiresAt !== null &&
+            seat.holdExpiresAt < now
+
+        if (expired) {
+            return {
+                ...safeSeat,
+                status: "AVAILABLE",
+                holdExpiresAt: null,
+                reservedAt: null,
+            }
         }
+
+        return safeSeat
     })
 
     return Response.json(result)
