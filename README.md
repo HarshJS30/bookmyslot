@@ -92,6 +92,19 @@ The tests are written to try to break the system, not just to pass.
 
 Latency here is mostly queueing: 1,000 virtual users with no pause hammering 4 Node processes. With no think time, average latency is roughly 1,000 divided by req/s (161 req/s works out to about 6 s, and the measured average in that run was 5.7 s), so it tells you nothing beyond throughput. It is a stress test, not a model of real users.
 
+#### Which layer rejected the requests
+
+The hold route counts its outcomes in Redis, and the totals can be read at `/api/stats`. In a clean one-seat fight (1,000 users, 20 rounds):
+
+| Outcome | Count |
+| --- | --- |
+| Won | 20 |
+| Rejected by the Redis lock | 19,980 |
+| Rejected by the database | 0 |
+| Rate limited | 0 |
+
+So the Redis lock turned away every losing request, and Postgres only had to decide the 20 winners. The counters are best effort: a failed count never fails a hold.
+
 ### 2. Paced mixed traffic (closer to real use)
 
 1,000 users, 40 s of think time between actions, hold then confirm or release, 60 s plateau.
@@ -144,6 +157,7 @@ Conclusion: the evidence points to CPU saturation in the Node.js request path in
 - Only the hold route is rate limited and there is no cap on how many seats one user can hold in total across several requests.
 - The organizer routes (events, ticket categories, seats) do not use zod validation the way holds and confirm do.
 - With Redis down, holds use the database alone, so the fast rejection layer is off and every contender reaches Postgres. Correctness holds (tested), but I have not measured how much slower that is under load.
+- The outcome counters add one Redis call per hold. I have not measured how much that costs in throughput.
 - Benchmarks should be rerun with k6 on a separate machine to remove the self-competition.
 
 ## Run it locally
@@ -181,6 +195,12 @@ npm run test:redis-down
 `npm run seed:homepage` creates or refreshes the nine event listings shown on the homepage, including venues, ticket prices and available seats. Check that `DATABASE_URL` points to the intended database before running it.
 
 Load tests live in `loadtest/` (`one-seat-fight.js`, `seat-traffic.js`). Seed with `scripts/load-seed.ts` first (for example `USERS=1000 SEATS=5000`). On Windows, run the k6 Docker command from PowerShell.
+
+To see which layer rejected the requests in a fight, reset the counters before the k6 run and open `http://localhost:8080/api/stats` after it finishes:
+
+```powershell
+docker compose exec redis redis-cli DEL stats:hold:won stats:hold:rejected-redis stats:hold:rejected-db stats:hold:rate-limited
+```
 
 ## Tech
 

@@ -16,6 +16,6 @@ export async function isRateLimited(userId: string): Promise<boolean> {
         return Number(result) > 30
     } catch (error) {
         console.error("Rate limiter failed:", error)
-        throw error
+        return false
     }
 }

@@ -6,6 +6,7 @@ import { seatIdsSchema } from "@/lib/validation";
 import { SeatsUnavailableError } from "@/lib/errors";
 import { acquireLock, releaseLock } from "@/lib/redis-locks";
 import { isRateLimited } from "@/lib/rate-limit";
+import { bump } from "@/lib/stats";
 
 export async function POST(
     request: Request,
@@ -19,9 +20,10 @@ export async function POST(
 
     const ratelimit = await isRateLimited(session.user.id)
     if(ratelimit){
+        void bump("rate-limited")
         return new Response("Too many requests",{
             status: 429,
-            headers:{"Retry-after":"60"}
+            headers:{"Retry-After":"60"}
         })
     }
 
@@ -92,7 +94,7 @@ export async function POST(
                     return releaseLock(seatId, session.user.id)
                 })
             );
-
+            void bump("rejected-redis")
             return new Response(
                 "One or more selected seats are held by another user",
                 { status: 409 }
@@ -159,7 +161,7 @@ export async function POST(
         } catch (err) {
             console.error("Failed to publish seat update:", err);
         }
-
+        void bump("won");
         return new Response(JSON.stringify(result), {
             status: 200,
         });
@@ -179,6 +181,7 @@ export async function POST(
         }
 
         if (error instanceof SeatsUnavailableError) {
+            void bump("rejected-db")
             return new Response(
                 "One or more selected seats are no longer available",
                 { status: 409 }
